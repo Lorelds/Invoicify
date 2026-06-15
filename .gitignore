@@ -34,24 +34,6 @@ npm-debug.log
 yarn-error.log
 
 
-# AI Assistants and Agent Artifacts
-/claude/
-/.claude/
-.claude
-/agents/
-/skills/
-/summary/
-/brain/
-.gemini/
-.ai/
-CLAUDE.md
-summary.md
-SUMMARY.md
-SUMMARY.txt
-implementation_plan.md
-task.md
-walkthrough.md
-
 # Local Scratch / Test Files
 test_bootstrap.php
 test_reflection.php
