@@ -1,21 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="background-color: #f4f6f9;">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f4f6f9">
+    <meta name="view-transition" content="same-origin">
     <title>Inventory Tesseract OCR</title>
+
+    <!-- Preload Critical CSS to prevent render-blocking delays -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style">
+    <link rel="preload" href="{{ asset('css/style.css') }}" as="style">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Phosphor Icons -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Phosphor Icons (defer to not block rendering) -->
+    <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
     <!-- Bootstrap CSS for grid system & utilities -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom Design System -->
+    <!-- Custom Design System (loads AFTER Bootstrap to override it) -->
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+    <!-- Critical CSS override (last = highest priority, prevents white flash) -->
+    <style>
+        @view-transition { navigation: auto; }
+        html { background-color: #f4f6f9 !important; }
+        body { background-color: #f4f6f9 !important; margin: 0; }
+        #app-wrapper { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background-color: #1e293b !important; flex-shrink: 0; }
+        .main-content { flex-grow: 1; background-color: #f4f6f9 !important; }
+    </style>
 </head>
-<body>
+<body style="background-color: #f4f6f9;">
     <div id="app-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar">
