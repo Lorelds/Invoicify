@@ -213,7 +213,7 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    (function() {
         let itemIndex = document.querySelectorAll('.item-row').length;
         const totalAmountInput = document.getElementById('total_amount');
         
@@ -369,6 +369,6 @@
         paymentStatus.addEventListener('change', updatePaymentFields);
         // Initial setup
         updatePaymentFields();
-    });
+    })();
 </script>
 @endpush

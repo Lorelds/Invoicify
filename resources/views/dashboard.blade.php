@@ -128,7 +128,7 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    (function() {
         const ctx = document.getElementById('salesChart').getContext('2d');
         const rawData = @json($chart_data);
         
@@ -188,7 +188,7 @@
                 }
             }
         });
-    });
+    })();
 </script>
 <style>
     .last-border-none:last-child {

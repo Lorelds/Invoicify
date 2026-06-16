@@ -217,7 +217,7 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    (function() {
         const ctx = document.getElementById('priceHistoryChart').getContext('2d');
         const labels = @json($price_history_dates);
         const data = @json($price_history_values);
@@ -279,6 +279,6 @@
                 }
             }
         });
-    });
+    })();
 </script>
 @endpush

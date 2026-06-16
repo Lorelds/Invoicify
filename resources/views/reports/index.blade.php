@@ -219,7 +219,7 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+(function() {
     const periodRadios = document.querySelectorAll('input[name="period"]');
     const standardDateContainer = document.getElementById('standardDateContainer');
     const customDateContainer = document.getElementById('customDateContainer');
@@ -257,6 +257,6 @@ document.addEventListener('DOMContentLoaded', function() {
             generateBtn.innerHTML = '<i class="ph-bold ph-download-simple me-2"></i> Generate & Download Report';
         }, 10000);
     });
-});
+})();
 </script>
 @endpush
