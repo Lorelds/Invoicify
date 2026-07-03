@@ -60,6 +60,13 @@
                             <input type="text" class="form-control bg-light" value="{{ $receipt->store->name ?? 'Unknown' }}" readonly>
                         </div>
                         <div class="col-md-6 mb-3">
+                            <label for="receipt_number" class="form-label fw-medium">Receipt / Nota Number</label>
+                            <input type="text" class="form-control" id="receipt_number" name="receipt_number" value="{{ old('receipt_number', $receipt->receipt_number ?? ($parsedData['receipt_number'] ?? '')) }}">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
                             <label for="transaction_date" class="form-label fw-medium">Transaction Date <span class="text-danger">*</span></label>
                             <input type="date" class="form-control" id="transaction_date" name="transaction_date" value="{{ old('transaction_date', $receipt->transaction_date ? \Carbon\Carbon::parse($receipt->transaction_date)->format('Y-m-d') : date('Y-m-d')) }}" required>
                         </div>

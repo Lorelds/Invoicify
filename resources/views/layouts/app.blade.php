@@ -5,7 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#f4f6f9">
     <meta name="view-transition" content="same-origin">
-    <title>Inventory Tesseract OCR</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
+    
+    <title>Invoicify</title>
 
     <!-- Hotwire Turbo for SPA-like navigation (Eliminates white flashes completely) -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.4/dist/turbo.es2017-esm.js"></script>
@@ -40,7 +47,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="ph-fill ph-scan"></i>
-                <span>OCR Inventory</span>
+                <span>Invoicify</span>
             </div>
             <nav class="sidebar-menu">
                 <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -137,6 +144,16 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+    </script>
+    
     @stack('scripts')
 </body>
 </html>

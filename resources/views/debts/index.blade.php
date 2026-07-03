@@ -81,7 +81,7 @@
                     </div>
                     
                     <div class="mt-4 pt-3 border-top">
-                        <a href="{{ route('debts.showStore', $store->id) }}" class="btn btn-light w-100 text-primary fw-medium border">
+                        <a href="{{ route('debts.showStore', ['store' => $store->id, 'type' => $type ?? 'receivable']) }}" class="btn btn-light w-100 text-primary fw-medium border">
                             Manage Vendor Debts <i class="ph-bold ph-arrow-right ms-1"></i>
                         </a>
                     </div>

@@ -7,6 +7,10 @@ use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\DebtController;
 
+Route::get('/offline', function () {
+    return view('offline');
+});
+
 Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');

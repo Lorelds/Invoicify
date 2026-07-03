@@ -24,8 +24,17 @@ class DashboardController extends Controller
             ->where('type', 'pembelian')
             ->sum('total_amount');
 
-        // Total Debt (Unpaid)
-        $total_debt = Debt::where('status', 'hutang')->sum('amount') - Debt::where('status', 'hutang')->sum('paid_amount');
+        // Hutang Toko (We Owe - Unpaid Purchases)
+        $hutang_query = Debt::where('status', 'hutang')->whereHas('receipt', function($q) {
+            $q->where('type', 'pembelian');
+        });
+        $hutang_toko = $hutang_query->sum('amount') - $hutang_query->sum('paid_amount');
+
+        // Piutang Pelanggan (They Owe - Unpaid Sales)
+        $piutang_query = Debt::where('status', 'hutang')->whereHas('receipt', function($q) {
+            $q->where('type', 'penjualan');
+        });
+        $piutang_pelanggan = $piutang_query->sum('amount') - $piutang_query->sum('paid_amount');
 
         // Total Products
         $total_products = Product::count();
@@ -58,7 +67,8 @@ class DashboardController extends Controller
         return view('dashboard', compact(
             'total_sales', 
             'total_purchases',
-            'total_debt', 
+            'hutang_toko', 
+            'piutang_pelanggan',
             'total_products', 
             'total_receipts', 
             'recent_receipts',

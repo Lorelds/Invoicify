@@ -12,6 +12,8 @@ class Receipt extends Model
 
     protected $fillable = [
         'store_id',
+        'company_id',
+        'receipt_number',
         'image_path',
         'raw_text',
         'store_name',

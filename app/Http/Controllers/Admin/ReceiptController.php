@@ -103,7 +103,7 @@ class ReceiptController extends Controller
         $base64Image = base64_encode(file_get_contents($fullImagePath));
         $mimeType = mime_content_type($fullImagePath);
 
-        $prompt = "Extract the receipt details into JSON. We need the following fields exactly: 'store_name' (string), 
+        $prompt = "Extract the receipt details into JSON. This is an Indonesian hardware store (toko bangunan) receipt with handwritten items. Common items include 'Pasir', 'Besi Polos' or 'Polos', 'Besi Ulir', 'Semen', 'Paku', 'Bendrat', 'Pipa', etc. Be very careful with messy handwriting (e.g. read 'Polos' instead of 'Plor' or 'Pdor'). We need the following fields exactly: 'receipt_number' (string, e.g. from 'No. Nota'), 'store_name' (string), 
         'transaction_date' (YYYY-MM-DD format), 'total_amount' (number), and an array of 'items' containing 'name' (string),
         'quantity' (raw quantity from the leftmost column, number), 'measure' (extract the multiplier like 6 for 6m or 25 for 25kg, default to 1, number), 
         'unit_price' (number), 'subtotal' (number). If a field is not found, leave it null or 0. Respond with ONLY the JSON object, nothing else.";
@@ -131,11 +131,13 @@ class ReceiptController extends Controller
 
         $rawText = "AI Extracted Data";
         $parsedData = [
+            'receipt_number' => null,
             'store_name' => null,
             'transaction_date' => null,
             'total_amount' => 0,
             'items' => []
         ];
+        $apiError = null;
 
         if ($response->successful()) {
             $responseData = $response->json();
@@ -154,6 +156,8 @@ class ReceiptController extends Controller
                 session()->put('ai_receipt_items_' . $imagePath, $parsedData['items'] ?? []);
             }
         } else {
+            $errorBody = $response->json();
+            $apiError = $errorBody['error']['message'] ?? 'The AI model is currently unavailable or busy. Please enter items manually.';
             \Log::error('Gemini API Error: ' . $response->body());
         }
 
@@ -162,6 +166,7 @@ class ReceiptController extends Controller
             'store_id' => $request->store_id,
             'image_path' => $imagePath,
             'raw_text' => $rawText,
+            'receipt_number' => $parsedData['receipt_number'] ?? null,
             'store_name' => $parsedData['store_name'] ?? null,
             'transaction_date' => $parsedData['transaction_date'] ?? null,
             'total_amount' => $parsedData['total_amount'] ?? 0.00,
@@ -169,6 +174,11 @@ class ReceiptController extends Controller
             'type' => $request->type,
             'payment_status' => 'hutang', // Default to hutang, will be confirmed in validation
         ]);
+
+        if ($apiError) {
+            return redirect()->route('admin.receipts.validate', $receipt->id)
+                ->withErrors(['ai_error' => 'AI Extraction Failed: ' . $apiError]);
+        }
 
         // Redirect to validation page
         return redirect()->route('admin.receipts.validate', $receipt->id)
@@ -200,10 +210,10 @@ class ReceiptController extends Controller
     // Handle validation and save data
     public function validateSubmit(Request $request, $id)
     {
-        $receipt = Receipt::findOrFail($id);
-
-        // Validate request
-        $validator = Validator::make($request->all(), [
+        $request->validate([
+            'receipt_number' => 'nullable|string|max:255',
+            'store_id' => 'required_without:new_store|nullable|exists:stores,id',
+            'new_store' => 'required_without:store_id|nullable|string|max:255',
             'transaction_date' => 'required|date',
             'total_amount' => 'required|numeric|min:0',
             'payment_status' => 'required|in:lunas,hutang,partial',
@@ -217,14 +227,18 @@ class ReceiptController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+        $receipt = Receipt::findOrFail($id);
+
+        $storeId = $request->store_id;
+        if ($request->filled('new_store')) {
+            $store = Store::create(['name' => $request->new_store]);
+            $storeId = $store->id;
         }
 
         // Update receipt with validated data
         $receipt->update([
+            'receipt_number' => $request->receipt_number,
+            'store_id' => $storeId,
             'transaction_date' => $request->transaction_date,
             'total_amount' => $request->total_amount,
             'payment_status' => $request->payment_status === 'partial' ? 'hutang' : $request->payment_status,
@@ -316,17 +330,21 @@ class ReceiptController extends Controller
     private function processReceiptItems($receipt, $items)
     {
         foreach ($items as $itemData) {
-            // Find or create product
-            $product = Product::firstOrCreate(
-                ['name' => $itemData['name']],
-                [
-                    'sku' => $this->generateSKU($itemData['name']),
+            $productName = trim($itemData['name']);
+            
+            // Find product case-insensitively to prevent duplicates from OCR variations
+            $product = Product::whereRaw('LOWER(name) = ?', [strtolower($productName)])->first();
+            
+            if (!$product) {
+                $product = Product::create([
+                    'name' => $productName,
+                    'sku' => $this->generateSKU($productName),
                     'buy_price' => $itemData['unit_price'],
                     'sell_price' => $itemData['unit_price'] * 1.5, // 50% markup as example
                     'stock' => 0,
                     'category' => $itemData['category'] ?? null,
-                ]
-            );
+                ]);
+            }
 
             // Update category if provided and different
             if (!empty($itemData['category']) && $product->category !== $itemData['category']) {
@@ -347,7 +365,7 @@ class ReceiptController extends Controller
             ReceiptItem::create([
                 'receipt_id' => $receipt->id,
                 'product_id' => $product->id,
-                'product_name' => $itemData['name'],
+                'product_name' => $product->name,
                 'quantity' => $itemData['quantity'],
                 'measure' => $measure,
                 'unit_price' => $itemData['unit_price'],

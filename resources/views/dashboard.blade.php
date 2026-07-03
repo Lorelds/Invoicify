@@ -10,7 +10,7 @@
 </div>
 
 <div class="row g-4 mb-4">
-    <div class="col-12 col-sm-6 col-xl-3">
+    <div class="col-12 col-sm-6 col-xl">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
@@ -25,44 +25,59 @@
         </div>
     </div>
     
-    <div class="col-12 col-sm-6 col-xl-3">
+    <div class="col-12 col-sm-6 col-xl">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <div class="bg-danger bg-opacity-10 text-danger rounded p-2 me-3">
                         <i class="ph-bold ph-hand-coins fs-4"></i>
                     </div>
-                    <h6 class="text-muted mb-0">{{ __('Total Debt') }}</h6>
+                    <h6 class="text-muted mb-0">{{ __('Hutang Toko') }}</h6>
                 </div>
-                <h3 class="mb-1">Rp {{ number_format($total_debt, 0, ',', '.') }}</h3>
-                <p class="text-danger small mb-0"><i class="ph-bold ph-warning"></i> {{ __('Unpaid Hutang') }}</p>
+                <h3 class="mb-1">Rp {{ number_format($hutang_toko, 0, ',', '.') }}</h3>
+                <p class="text-danger small mb-0"><i class="ph-bold ph-warning"></i> {{ __('We Owe') }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-warning bg-opacity-10 text-warning rounded p-2 me-3">
+                        <i class="ph-bold ph-wallet fs-4"></i>
+                    </div>
+                    <h6 class="text-muted mb-0">{{ __('Piutang') }}</h6>
+                </div>
+                <h3 class="mb-1">Rp {{ number_format($piutang_pelanggan, 0, ',', '.') }}</h3>
+                <p class="text-warning small mb-0"><i class="ph-bold ph-clock"></i> {{ __('They Owe Us') }}</p>
             </div>
         </div>
     </div>
     
-    <div class="col-12 col-sm-6 col-xl-3">
+    <div class="col-12 col-sm-6 col-xl">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <div class="bg-success bg-opacity-10 text-success rounded p-2 me-3">
                         <i class="ph-bold ph-package fs-4"></i>
                     </div>
-                    <h6 class="text-muted mb-0">{{ __('Total Products') }}</h6>
+                    <h6 class="text-muted mb-0">{{ __('Products') }}</h6>
                 </div>
                 <h3 class="mb-1">{{ number_format($total_products, 0, ',', '.') }}</h3>
-                <p class="text-muted small mb-0">{{ __('Unique Items in Inventory') }}</p>
+                <p class="text-muted small mb-0">{{ __('Unique Items') }}</p>
             </div>
         </div>
     </div>
     
-    <div class="col-12 col-sm-6 col-xl-3">
+    <div class="col-12 col-sm-6 col-xl">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <div class="bg-info bg-opacity-10 text-info rounded p-2 me-3">
                         <i class="ph-bold ph-receipt fs-4"></i>
                     </div>
-                    <h6 class="text-muted mb-0">{{ __('Total Receipts') }}</h6>
+                    <h6 class="text-muted mb-0">{{ __('Receipts') }}</h6>
                 </div>
                 <h3 class="mb-1">{{ number_format($total_receipts, 0, ',', '.') }}</h3>
                 <p class="text-muted small mb-0">{{ __('Validated Receipts') }}</p>
@@ -99,7 +114,7 @@
                         <div>
                             <p class="fw-medium mb-1">
                                 <a href="{{ route('admin.receipts.show', $receipt->id) }}" class="text-dark text-decoration-none hover-primary">
-                                    #{{ str_pad($receipt->id, 5, '0', STR_PAD_LEFT) }} - {{ $receipt->store->name ?? $receipt->store_name ?? 'Unknown Store' }}
+                                    #{{ $receipt->receipt_number ?? str_pad($receipt->id, 5, '0', STR_PAD_LEFT) }} - {{ $receipt->store->name ?? $receipt->store_name ?? 'Unknown Store' }}
                                 </a>
                             </p>
                             <p class="text-muted small mb-0">{{ \Carbon\Carbon::parse($receipt->transaction_date)->format('d M Y') }}</p>

@@ -8,7 +8,7 @@
             <i class="ph-bold ph-arrow-left"></i>
         </a>
         <div>
-            <h2 class="mb-1">Receipt #{{ str_pad($receipt->id, 5, '0', STR_PAD_LEFT) }}</h2>
+            <h2 class="mb-1">Receipt #{{ $receipt->receipt_number ?? str_pad($receipt->id, 5, '0', STR_PAD_LEFT) }}</h2>
             <p class="text-muted mb-0">Detailed view of the scanned receipt and its extracted items.</p>
         </div>
     </div>

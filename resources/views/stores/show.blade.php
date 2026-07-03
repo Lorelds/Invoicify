@@ -77,7 +77,7 @@
                         <tbody>
                             @forelse($store->receipts()->orderBy('created_at', 'desc')->get() as $receipt)
                                 <tr style="cursor: pointer;" onclick="window.location='{{ route('admin.receipts.show', $receipt->id) }}'">
-                                    <td class="ps-4 fw-medium text-primary">#{{ str_pad($receipt->id, 5, '0', STR_PAD_LEFT) }}</td>
+                                    <td class="ps-4 fw-medium text-primary">#{{ $receipt->receipt_number ?? str_pad($receipt->id, 5, '0', STR_PAD_LEFT) }}</td>
                                     <td>{{ $receipt->transaction_date ? \Carbon\Carbon::parse($receipt->transaction_date)->format('d M Y') : 'Unknown' }}</td>
                                     <td>
                                         @if($receipt->status == 'pending')
