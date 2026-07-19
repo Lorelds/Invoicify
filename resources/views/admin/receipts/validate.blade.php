@@ -8,8 +8,8 @@
             <i class="ph-bold ph-arrow-left"></i>
         </a>
         <div>
-            <h2 class="mb-1">Review OCR Results</h2>
-            <p class="text-muted mb-0">Please verify and correct the extracted data before saving to inventory.</p>
+            <h2 class="mb-1">{{ __('Tinjau Hasil OCR') }}</h2>
+            <p class="text-muted mb-0">{{ __('Harap periksa dan koreksi data yang diekstrak sebelum menyimpan ke inventaris.') }}</p>
         </div>
     </div>
 </div>
@@ -36,7 +36,7 @@
         <div class="col-lg-5 mb-4 mb-lg-0">
             <div class="card border-0 shadow-sm h-100 sticky-top" style="top: 90px; z-index: 10;">
                 <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
-                    <h5 class="fw-semibold text-dark"><i class="ph ph-image me-2"></i> Receipt Image</h5>
+                    <h5 class="fw-semibold text-dark"><i class="ph ph-image me-2"></i> {{ __('Gambar Nota') }}</h5>
                 </div>
                 <div class="card-body p-4 text-center">
                     <div class="border rounded p-2 bg-light d-flex justify-content-center align-items-center" style="min-height: 400px; max-height: 600px; overflow: hidden;">
@@ -51,49 +51,50 @@
             <!-- General Info -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
-                    <h5 class="fw-semibold text-dark"><i class="ph ph-receipt me-2"></i> General Information</h5>
+                    <h5 class="fw-semibold text-dark"><i class="ph ph-receipt me-2"></i> {{ __('Informasi Umum') }}</h5>
                 </div>
                 <div class="card-body p-4">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-medium">Store/Vendor</label>
-                            <input type="text" class="form-control bg-light" value="{{ $receipt->store->name ?? 'Unknown' }}" readonly>
+                            <label class="form-label fw-medium">{{ __('Toko/Supplier') }}</label>
+                            <input type="hidden" name="store_id" value="{{ $receipt->store_id }}">
+                            <input type="text" class="form-control bg-light" value="{{ $receipt->store->name ?? __('Unknown') }}" readonly>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="receipt_number" class="form-label fw-medium">Receipt / Nota Number</label>
+                            <label for="receipt_number" class="form-label fw-medium">{{ __('Nomor Nota') }}</label>
                             <input type="text" class="form-control" id="receipt_number" name="receipt_number" value="{{ old('receipt_number', $receipt->receipt_number ?? ($parsedData['receipt_number'] ?? '')) }}">
                         </div>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-12 mb-3">
-                            <label for="transaction_date" class="form-label fw-medium">Transaction Date <span class="text-danger">*</span></label>
+                            <label for="transaction_date" class="form-label fw-medium">{{ __('Tanggal Transaksi') }} <span class="text-danger">*</span></label>
                             <input type="date" class="form-control" id="transaction_date" name="transaction_date" value="{{ old('transaction_date', $receipt->transaction_date ? \Carbon\Carbon::parse($receipt->transaction_date)->format('Y-m-d') : date('Y-m-d')) }}" required>
                         </div>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="total_amount" class="form-label fw-medium">Total Amount <span class="text-danger">*</span></label>
+                            <label for="total_amount" class="form-label fw-medium">{{ __('Total Harga') }} <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light fw-bold">Rp</span>
                                 <input type="number" step="0.01" class="form-control" id="total_amount" name="total_amount" value="{{ old('total_amount', $receipt->total_amount) }}" required>
                             </div>
-                            <div class="form-text mt-1"><i class="ph ph-magic-wand"></i> Will update automatically based on item subtotals.</div>
+                            <div class="form-text mt-1"><i class="ph ph-magic-wand"></i> {{ __('Akan diperbarui otomatis berdasarkan subtotal barang.') }}</div>
                         </div>
                         <div class="col-md-6 mb-3 d-flex align-items-end">
                             <button type="button" class="btn btn-outline-success w-100 mb-4" id="convertUsdBtn">
-                                <i class="ph-bold ph-currency-circle-dollar me-1"></i> Convert USD to IDR
+                                <i class="ph-bold ph-currency-circle-dollar me-1"></i> {{ __('Konversi USD ke IDR') }}
                             </button>
                         </div>
                     </div>
                     <div class="row border-top pt-3 mt-1 bg-light bg-opacity-50 rounded">
                         <div class="col-md-4 mb-3">
-                            <label for="payment_status" class="form-label fw-medium">Payment Status <span class="text-danger">*</span></label>
+                            <label for="payment_status" class="form-label fw-medium">{{ __('Status Pembayaran') }} <span class="text-danger">*</span></label>
                             <select class="form-select border-primary" id="payment_status" name="payment_status" required>
-                                <option value="lunas" {{ $receipt->payment_status === 'lunas' ? 'selected' : '' }}>Lunas (Paid in Full)</option>
-                                <option value="hutang" {{ $receipt->payment_status === 'hutang' ? 'selected' : '' }}>Belum Lunas (Hutang)</option>
-                                <option value="partial" {{ $receipt->payment_status === 'partial' ? 'selected' : '' }}>Dibayar Sebagian (DP)</option>
+                                <option value="lunas" {{ $receipt->payment_status === 'lunas' ? 'selected' : '' }}>{{ __('Lunas') }}</option>
+                                <option value="hutang" {{ $receipt->payment_status === 'hutang' ? 'selected' : '' }}>{{ __('Belum Lunas (Hutang)') }}</option>
+                                <option value="partial" {{ $receipt->payment_status === 'partial' ? 'selected' : '' }}>{{ __('Dibayar Sebagian (DP)') }}</option>
                             </select>
                         </div>
                         
@@ -106,7 +107,7 @@
                         </div>
 
                         <div class="col-md-4 mb-3" id="payment_method_container" style="display: none;">
-                            <label for="payment_method" class="form-label fw-medium text-success"><i class="ph-fill ph-check-circle me-1"></i> Payment Method</label>
+                            <label for="payment_method" class="form-label fw-medium text-success"><i class="ph-fill ph-check-circle me-1"></i> {{ __('Metode Pembayaran') }}</label>
                             <select class="form-select border-success" id="payment_method" name="payment_method">
                                 <option value="Cash">Cash</option>
                                 <option value="Bank Transfer">Bank Transfer</option>
@@ -121,9 +122,9 @@
             <!-- Items Validation -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-semibold text-dark mb-0"><i class="ph ph-list-numbers me-2"></i> Extracted Items</h5>
+                    <h5 class="fw-semibold text-dark mb-0"><i class="ph ph-list-numbers me-2"></i> {{ __('Barang yang Diekstrak') }}</h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" id="addItemBtn">
-                        <i class="ph-bold ph-plus"></i> Add Missing Item
+                        <i class="ph-bold ph-plus"></i> {{ __('Tambah Barang') }}
                     </button>
                 </div>
                 <div class="card-body p-4">
@@ -131,12 +132,12 @@
                         <table class="table table-bordered align-middle" id="itemsTable">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width: 25%">Item Name</th>
-                                    <th style="width: 15%">Category <small class="text-muted fw-normal">(Optional)</small></th>
-                                    <th style="width: 12%">Qty</th>
-                                    <th style="width: 13%">M/Kg <small class="text-muted fw-normal">(Optional)</small></th>
-                                    <th style="width: 15%">Unit Price</th>
-                                    <th style="width: 15%">Subtotal</th>
+                                    <th style="width: 25%">{{ __('Nama Barang') }}</th>
+                                    <th style="width: 15%">{{ __('Kategori') }} <small class="text-muted fw-normal">({{ __('Opsional') }})</small></th>
+                                    <th style="width: 12%">{{ __('Kuantitas') }}</th>
+                                    <th style="width: 13%">M/Kg <small class="text-muted fw-normal">({{ __('Opsional') }})</small></th>
+                                    <th style="width: 15%">{{ __('Harga Satuan') }}</th>
+                                    <th style="width: 15%">{{ __('Subtotal') }}</th>
                                     <th style="width: 5%"></th>
                                 </tr>
                             </thead>
@@ -172,7 +173,7 @@
                                 @empty
                                     <tr id="noItemsRow">
                                         <td colspan="7" class="text-center text-muted py-3">
-                                            No items were automatically detected. Please add them manually.
+                                            {{ __('Barang tidak ditemukan. Mulai dengan menambahkan barang baru secara manual atau scan nota.') }}
                                         </td>
                                     </tr>
                                 @endforelse
@@ -182,15 +183,15 @@
                     
                     <div class="alert alert-info mt-3 border-0 d-flex align-items-center">
                         <i class="ph-fill ph-info fs-4 me-2"></i>
-                        <div>Items will be automatically matched to existing products or created as new products.</div>
+                        <div>{{ __('Barang akan dicocokkan otomatis dengan barang yang sudah ada atau dibuat sebagai barang baru.') }}</div>
                     </div>
                 </div>
             </div>
             
             <div class="d-flex justify-content-end gap-3 mb-5">
-                <a href="{{ route('admin.receipts.index') }}" class="btn btn-light border px-4 py-2">Cancel</a>
+                <a href="{{ route('admin.receipts.index') }}" class="btn btn-light border px-4 py-2">{{ __('Batal') }}</a>
                 <button type="submit" class="btn btn-success px-5 py-2 fw-semibold">
-                    <i class="ph-bold ph-check-circle me-1"></i> Confirm & Save to Inventory
+                    <i class="ph-bold ph-check-circle me-1"></i> {{ __('Konfirmasi & Simpan ke Inventaris') }}
                 </button>
             </div>
         </div>

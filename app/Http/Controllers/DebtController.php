@@ -98,8 +98,14 @@ class DebtController extends Controller
             
             if (round($debt->paid_amount, 2) >= round($debt->amount, 2)) {
                 $debt->status = 'lunas';
+                if ($debt->receipt) {
+                    $debt->receipt->update(['payment_status' => 'lunas']);
+                }
             } else {
                 $debt->status = 'partial';
+                if ($debt->receipt) {
+                    $debt->receipt->update(['payment_status' => 'partial']);
+                }
             }
             
             $debt->save();

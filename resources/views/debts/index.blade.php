@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('page_title', 'Debts Overview')
+@section('page_title', 'Ringkasan Hutang')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -8,8 +8,8 @@
             <i class="ph-bold ph-arrow-left"></i>
         </a>
         <div>
-            <h2 class="mb-1">Active Debts</h2>
-            <p class="text-muted mb-0">Overview of all outstanding debts grouped by vendor.</p>
+            <h2 class="mb-1">Hutang Aktif</h2>
+            <p class="text-muted mb-0">Ringkasan semua sisa hutang dikelompokkan berdasarkan toko/supplier.</p>
         </div>
     </div>
     <form action="{{ route('debts.index') }}" method="GET" class="d-flex">
@@ -56,22 +56,22 @@
                             </div>
                             <div>
                                 <h5 class="mb-0">{{ $store->name }}</h5>
-                                <span class="text-muted small">{{ $activeDebtsCount }} Active Invoice(s)</span>
+                                <span class="text-muted small">{{ $activeDebtsCount }} Nota Aktif</span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="mt-4">
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted small">Total Debt</span>
+                            <span class="text-muted small">Total Hutang</span>
                             <span class="fw-medium">Rp {{ number_format($totalDebt, 0, ',', '.') }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted small">Total Paid</span>
+                            <span class="text-muted small">Total Dibayar</span>
                             <span class="fw-medium text-success">Rp {{ number_format($totalPaid, 0, ',', '.') }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-3 border-top pt-1 mt-1">
-                            <span class="fw-semibold">Remaining Balance</span>
+                            <span class="fw-semibold">Sisa Saldo</span>
                             <span class="fw-bold text-danger">Rp {{ number_format($remaining, 0, ',', '.') }}</span>
                         </div>
                         
@@ -82,7 +82,7 @@
                     
                     <div class="mt-4 pt-3 border-top">
                         <a href="{{ route('debts.showStore', ['store' => $store->id, 'type' => $type ?? 'receivable']) }}" class="btn btn-light w-100 text-primary fw-medium border">
-                            Manage Vendor Debts <i class="ph-bold ph-arrow-right ms-1"></i>
+                            Kelola Hutang Toko <i class="ph-bold ph-arrow-right ms-1"></i>
                         </a>
                     </div>
                 </div>
@@ -93,9 +93,9 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-5 text-center">
                     <i class="ph-fill ph-check-circle text-success mb-3" style="font-size: 4rem;"></i>
-                    <h4 class="mb-2">No Debts Found</h4>
-                    <p class="text-muted">You currently do not have any debts recorded with any vendors. All your inventory receipts are fully paid!</p>
-                    <a href="{{ route('admin.receipts.index') }}" class="btn btn-primary mt-3">Upload New Receipt</a>
+                    <h4 class="mb-2">Tidak Ada Hutang Ditemukan</h4>
+                    <p class="text-muted">Saat ini Anda tidak memiliki hutang yang tercatat pada toko manapun. Semua nota inventaris Anda telah lunas!</p>
+                    <a href="{{ route('admin.receipts.index') }}" class="btn btn-primary mt-3">Unggah Nota Baru</a>
                 </div>
             </div>
         </div>

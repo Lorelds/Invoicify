@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('page_title', 'Receipt History')
+@section('page_title', 'Histori Nota')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -8,26 +8,26 @@
             <i class="ph-bold ph-arrow-left"></i>
         </a>
         <div>
-            <h2 class="mb-1">Receipt History</h2>
-            <p class="text-muted mb-0">View all scanned receipts and their current status.</p>
+            <h2 class="mb-1">Histori Nota</h2>
+            <p class="text-muted mb-0">Lihat semua nota yang dipindai dan status saat ini.</p>
         </div>
     </div>
     <div>
         <a href="{{ route('admin.receipts.upload.form') }}" class="btn btn-primary px-4 fw-medium">
-            <i class="ph-bold ph-plus me-1"></i> Upload New Receipt
+            <i class="ph-bold ph-plus me-1"></i> Unggah Nota Baru
         </a>
     </div>
 </div>
 
 <div class="d-flex gap-2 mb-4">
     <a href="{{ route('admin.receipts.index', array_merge(request()->query(), ['type' => ''])) }}" class="btn {{ request('type') == '' ? 'btn-dark' : 'btn-outline-dark bg-white' }} px-4 rounded-pill fw-medium shadow-sm">
-        All Receipts
+        Semua Nota
     </a>
     <a href="{{ route('admin.receipts.index', array_merge(request()->query(), ['type' => 'pembelian'])) }}" class="btn {{ request('type') == 'pembelian' ? 'btn-primary' : 'btn-outline-primary bg-white' }} px-4 rounded-pill fw-medium shadow-sm">
-        <i class="ph-bold ph-download-simple me-1"></i> Pembelian (Buy)
+        <i class="ph-bold ph-download-simple me-1"></i> Pembelian
     </a>
     <a href="{{ route('admin.receipts.index', array_merge(request()->query(), ['type' => 'penjualan'])) }}" class="btn {{ request('type') == 'penjualan' ? 'btn-success' : 'btn-outline-success bg-white' }} px-4 rounded-pill fw-medium shadow-sm">
-        <i class="ph-bold ph-upload-simple me-1"></i> Penjualan (Sell)
+        <i class="ph-bold ph-upload-simple me-1"></i> Penjualan
     </a>
 </div>
 
@@ -40,19 +40,19 @@
             @endif
             
             <div class="col-md-6">
-                <label class="form-label text-muted small mb-1">Search Receipts</label>
+                <label class="form-label text-muted small mb-1">Cari Nota</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white"><i class="ph ph-magnifying-glass"></i></span>
-                    <input type="text" class="form-control" name="search" value="{{ request('search') }}" placeholder="Search by ID, Status, or Store Name...">
+                    <input type="text" class="form-control" name="search" value="{{ request('search') }}" placeholder="Cari berdasarkan ID, Status, atau Nama Toko...">
                 </div>
             </div>
             <div class="col-md-4">
-                <label class="form-label text-muted small mb-1">Sort By</label>
+                <label class="form-label text-muted small mb-1">Urutkan</label>
                 <select name="sort" class="form-select">
-                    <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Newest First</option>
-                    <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Oldest First</option>
-                    <option value="highest_amount" {{ request('sort') == 'highest_amount' ? 'selected' : '' }}>Highest Amount</option>
-                    <option value="lowest_amount" {{ request('sort') == 'lowest_amount' ? 'selected' : '' }}>Lowest Amount</option>
+                    <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Terbaru</option>
+                    <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Terlama</option>
+                    <option value="highest_amount" {{ request('sort') == 'highest_amount' ? 'selected' : '' }}>Jumlah Tertinggi</option>
+                    <option value="lowest_amount" {{ request('sort') == 'lowest_amount' ? 'selected' : '' }}>Jumlah Terendah</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -68,14 +68,14 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4">Receipt ID</th>
-                        <th>Date</th>
-                        <th>Store / Vendor</th>
-                        <th>Type</th>
-                        <th>Total Amount</th>
-                        <th>Payment Status</th>
-                        <th>Validation Status</th>
-                        <th class="text-end pe-4">Actions</th>
+                        <th class="ps-4">ID Nota</th>
+                        <th>Tanggal</th>
+                        <th>Toko / Supplier</th>
+                        <th>Tipe</th>
+                        <th>Total Harga</th>
+                        <th>Status Pembayaran</th>
+                        <th>Status Validasi</th>
+                        <th class="text-end pe-4">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -100,33 +100,33 @@
                             <td class="fw-medium">Rp {{ number_format($receipt->total_amount, 0, ',', '.') }}</td>
                             <td>
                                 @if($receipt->payment_status == 'lunas')
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1"><i class="ph-fill ph-check-circle me-1"></i> Paid in Full</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1"><i class="ph-fill ph-check-circle me-1"></i> Lunas</span>
                                 @else
-                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1"><i class="ph-fill ph-clock me-1"></i> Debt (Hutang)</span>
+                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1"><i class="ph-fill ph-clock me-1"></i> Belum Lunas (Hutang)</span>
                                 @endif
                             </td>
                             <td>
                                 @if($receipt->status == 'validated')
-                                    <span class="badge bg-primary">Validated</span>
+                                    <span class="badge bg-primary">Tervalidasi</span>
                                 @else
-                                    <span class="badge bg-secondary">Pending</span>
+                                    <span class="badge bg-secondary">Menunggu Validasi</span>
                                 @endif
                             </td>
                             <td class="text-end pe-4">
                                 @if($receipt->status == 'pending')
                                     <a href="{{ route('admin.receipts.validate', $receipt->id) }}" class="btn btn-sm btn-outline-warning">
-                                        <i class="ph-bold ph-check-square-offset"></i> Validate
+                                        <i class="ph-bold ph-check-square-offset"></i> Validasi
                                     </a>
                                 @else
                                     <div class="btn-group">
                                         <a href="{{ route('admin.receipts.show', $receipt->id) }}" class="btn btn-sm btn-light border text-primary">
-                                            <i class="ph-bold ph-eye"></i> View Details
+                                            <i class="ph-bold ph-eye"></i> Lihat Detail
                                         </a>
                                         @if(auth()->check() && auth()->user()->role === 'super_admin')
-                                        <form action="{{ route('admin.receipts.destroy', $receipt->id) }}" method="POST" class="d-inline" onsubmit="return confirm('WARNING: Deleting this receipt will subtract the items from inventory and reverse vendor debts! Are you absolutely sure?');">
+                                        <form action="{{ route('admin.receipts.destroy', $receipt->id) }}" method="POST" class="d-inline" onsubmit="return confirm('PERINGATAN: Menghapus nota ini akan mengurangi barang dari inventaris dan membatalkan hutang toko! Apakah Anda yakin?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete Receipt">
+                                            <button type="submit" class="btn btn-sm btn-light border text-danger" title="Hapus Nota">
                                                 <i class="ph-bold ph-trash"></i>
                                             </button>
                                         </form>
@@ -139,9 +139,9 @@
                         <tr>
                             <td colspan="7" class="text-center py-5 text-muted">
                                 <i class="ph-fill ph-receipt fs-1 mb-2 text-light"></i>
-                                <h5>No Receipts Found</h5>
-                                <p>You haven't uploaded any receipts yet.</p>
-                                <a href="{{ route('admin.receipts.upload.form') }}" class="btn btn-sm btn-primary mt-2">Upload Now</a>
+                                <h5>Tidak Ada Nota Ditemukan</h5>
+                                <p>Anda belum mengunggah nota apapun.</p>
+                                <a href="{{ route('admin.receipts.upload.form') }}" class="btn btn-sm btn-primary mt-2">Unggah Sekarang</a>
                             </td>
                         </tr>
                     @endforelse

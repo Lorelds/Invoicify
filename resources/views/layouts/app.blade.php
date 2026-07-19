@@ -83,17 +83,6 @@
                 </div>
                 <div class="d-flex align-items-center gap-3">
                     
-                    <!-- Language Switcher -->
-                    <div class="dropdown">
-                        <button class="btn btn-light bg-white border shadow-sm dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 8px;">
-                            <i class="ph-bold ph-globe"></i>
-                            <span class="text-uppercase fw-semibold">{{ session('locale', 'en') }}</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: 8px; min-width: 120px;">
-                            <li><a class="dropdown-item d-flex align-items-center gap-2 {{ session('locale', 'en') === 'en' ? 'active bg-primary' : '' }}" href="{{ route('lang.switch', 'en') }}">🇬🇧 English</a></li>
-                            <li><a class="dropdown-item d-flex align-items-center gap-2 {{ session('locale') === 'id' ? 'active bg-primary' : '' }}" href="{{ route('lang.switch', 'id') }}">🇮🇩 Indonesia</a></li>
-                        </ul>
-                    </div>
 
                     <div class="d-flex align-items-center gap-2 ms-2">
                         <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'User') }}&background=0ea5e9&color=fff" alt="User" class="rounded-circle" width="36" height="36">
@@ -102,7 +91,7 @@
                         <form method="POST" action="{{ route('logout') }}" class="ms-3">
                             @csrf
                             <button type="submit" class="btn btn-sm btn-outline-danger">
-                                <i class="ph-bold ph-sign-out me-1"></i> Logout
+                                <i class="ph-bold ph-sign-out me-1"></i> {{ __('Keluar') }}
                             </button>
                         </form>
                     </div>

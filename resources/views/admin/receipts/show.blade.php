@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('page_title', 'Receipt Details')
+@section('page_title', 'Detail Nota')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -15,23 +15,23 @@
     <div>
         @if($receipt->status == 'pending')
             <a href="{{ route('admin.receipts.validate', $receipt->id) }}" class="btn btn-warning px-4 fw-medium">
-                <i class="ph-bold ph-check-square-offset me-1"></i> Validate Now
+                <i class="ph-bold ph-check-square-offset me-1"></i> Validasi Now
             </a>
         @endif
     </div>
 </div>
 
 <div class="row">
-    <!-- Receipt Image Column -->
+    <!-- Gambar Nota Column -->
     <div class="col-lg-5 mb-4 mb-lg-0">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
-                <h5 class="fw-semibold text-dark"><i class="ph ph-image me-2"></i> Original Receipt Image</h5>
+                <h5 class="fw-semibold text-dark"><i class="ph ph-image me-2"></i> Original Gambar Nota</h5>
             </div>
             <div class="card-body p-4 text-center">
                 <div class="border rounded p-2 bg-light d-flex justify-content-center align-items-center" style="min-height: 400px;">
                     <a href="{{ Storage::url($receipt->image_path) }}" target="_blank" title="Click to view full size">
-                        <img src="{{ Storage::url($receipt->image_path) }}" alt="Receipt Image" class="img-fluid rounded" style="object-fit: contain; max-height: 600px; width: auto;">
+                        <img src="{{ Storage::url($receipt->image_path) }}" alt="Gambar Nota" class="img-fluid rounded" style="object-fit: contain; max-height: 600px; width: auto;">
                     </a>
                 </div>
                 <div class="mt-3 text-muted small"><i class="ph-fill ph-magnifying-glass-plus"></i> Click image to view full size</div>
@@ -39,7 +39,7 @@
         </div>
     </div>
     
-    <!-- Receipt Details Column -->
+    <!-- Detail Nota Column -->
     <div class="col-lg-7">
         <!-- Summary Card -->
         <div class="card border-0 shadow-sm mb-4">
@@ -49,7 +49,7 @@
             <div class="card-body p-4">
                 <div class="row mb-4">
                     <div class="col-sm-6 mb-3 mb-sm-0">
-                        <div class="text-muted small mb-1">Store / Vendor</div>
+                        <div class="text-muted small mb-1">Toko / Supplier</div>
                         <div class="fw-semibold fs-5 text-dark">
                             @if($receipt->store)
                                 <a href="{{ route('stores.show', $receipt->store->id) }}" class="text-decoration-none">{{ $receipt->store->name }}</a>
@@ -59,23 +59,23 @@
                         </div>
                     </div>
                     <div class="col-sm-6 text-sm-end">
-                        <div class="text-muted small mb-1">Transaction Date</div>
+                        <div class="text-muted small mb-1">Transaction Tanggal</div>
                         <div class="fw-medium text-dark">{{ $receipt->transaction_date ? \Carbon\Carbon::parse($receipt->transaction_date)->format('l, d F Y') : 'Unknown' }}</div>
                     </div>
                 </div>
                 
                 <div class="row bg-light rounded p-3 align-items-center">
                     <div class="col-sm-6 mb-2 mb-sm-0">
-                        <div class="text-muted small mb-1">Total Amount</div>
+                        <div class="text-muted small mb-1">Total Harga</div>
                         <div class="fw-bold fs-4 text-primary">Rp {{ number_format($receipt->total_amount, 0, ',', '.') }}</div>
                     </div>
                     <div class="col-sm-6 text-sm-end">
-                        <div class="text-muted small mb-1">Payment Status</div>
+                        <div class="text-muted small mb-1">Status Pembayaran</div>
                         <div>
                             @if($receipt->payment_status == 'lunas')
-                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2"><i class="ph-fill ph-check-circle me-1"></i> Paid in Full</span>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2"><i class="ph-fill ph-check-circle me-1"></i> Lunas</span>
                             @else
-                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2"><i class="ph-fill ph-clock me-1"></i> Debt (Hutang)</span>
+                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2"><i class="ph-fill ph-clock me-1"></i> Belum Lunas (Hutang)</span>
                                 @if($receipt->debt)
                                     <a href="{{ route('debts.showStore', $receipt->store_id) }}" class="d-block mt-2 small text-decoration-none">View Debt Details <i class="ph-bold ph-arrow-right"></i></a>
                                 @endif
@@ -85,8 +85,8 @@
                 </div>
 
                 <div class="mt-4 border-top pt-3 d-flex justify-content-between small text-muted">
-                    <div>Validated By: <span class="fw-medium text-dark">{{ $receipt->validatedBy->name ?? 'System' }}</span></div>
-                    <div>Validated At: <span class="fw-medium text-dark">{{ $receipt->validated_at ? \Carbon\Carbon::parse($receipt->validated_at)->format('d M Y, H:i') : 'N/A' }}</span></div>
+                    <div>Validasid By: <span class="fw-medium text-dark">{{ $receipt->validatedBy->name ?? 'System' }}</span></div>
+                    <div>Validasid At: <span class="fw-medium text-dark">{{ $receipt->validated_at ? \Carbon\Carbon::parse($receipt->validated_at)->format('d M Y, H:i') : 'N/A' }}</span></div>
                 </div>
             </div>
         </div>
@@ -101,9 +101,9 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th class="ps-4">Item Name</th>
-                                <th class="text-center">Qty</th>
-                                <th class="text-end">Unit Price</th>
+                                <th class="ps-4">Nama Barang</th>
+                                <th class="text-center">Jml</th>
+                                <th class="text-end">Harga Satuan</th>
                                 <th class="text-end pe-4">Subtotal</th>
                             </tr>
                         </thead>

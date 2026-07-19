@@ -8,8 +8,8 @@
             <i class="ph-bold ph-arrow-left"></i>
         </a>
         <div>
-            <h2 class="mb-1">{{ __('Reports & Export') }}</h2>
-            <p class="text-muted mb-0">{{ __('Generate weekly, monthly, or yearly reports as PDF or Excel.') }}</p>
+            <h2 class="mb-1">{{ __('Laporan & Ekspor') }}</h2>
+            <p class="text-muted mb-0">{{ __('Buat laporan mingguan, bulanan, atau tahunan dalam format PDF atau Excel.') }}</p>
         </div>
     </div>
 </div>
@@ -56,7 +56,7 @@
                             <input type="date" class="form-control border-start-0 ps-0" id="date" name="date" value="{{ date('Y-m-d') }}">
                         </div>
                         <div class="form-text mt-2" id="dateHelpText">
-                            <i class="ph ph-info"></i> <span id="dateHelpContent">The report will cover the week containing this date.</span>
+                            <i class="ph ph-info"></i> <span id="dateHelpContent">Laporan akan mencakup minggu yang berisi tanggal ini.</span>
                         </div>
                     </div>
 
@@ -109,11 +109,11 @@
         </form>
     </div>
 
-    <!-- Right: Report Contents Preview -->
+    <!-- Right: Isi Laporan Preview -->
     <div class="col-lg-7 mb-4">
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
-                <h5 class="fw-semibold mb-4"><i class="ph ph-list-checks text-primary me-2"></i>{{ __('Report Contents') }}</h5>
+                <h5 class="fw-semibold mb-4"><i class="ph ph-list-checks text-primary me-2"></i>{{ __('Isi Laporan') }}</h5>
 
                 <div class="row g-3">
                     <!-- Sales -->
@@ -123,12 +123,12 @@
                                 <div class="p-2 bg-success bg-opacity-10 rounded-2">
                                     <i class="ph-fill ph-chart-line-up text-success fs-5"></i>
                                 </div>
-                                <h6 class="mb-0 fw-semibold">{{ __('Sales Summary') }}</h6>
+                                <h6 class="mb-0 fw-semibold">{{ __('Ringkasan Penjualan') }}</h6>
                             </div>
                             <ul class="list-unstyled text-muted small mb-0 ps-1">
-                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('Total sales & transactions') }}</li>
-                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('Paid vs unpaid breakdown') }}</li>
-                                <li><i class="ph ph-check-circle text-success me-1"></i> {{ __('Receipt detail list') }}</li>
+                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('Total penjualan & transaksi') }}</li>
+                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('Rincian lunas vs belum lunas') }}</li>
+                                <li><i class="ph ph-check-circle text-success me-1"></i> {{ __('Daftar detail nota') }}</li>
                             </ul>
                         </div>
                     </div>
@@ -140,12 +140,12 @@
                                 <div class="p-2 bg-warning bg-opacity-10 rounded-2">
                                     <i class="ph-fill ph-shopping-cart text-warning fs-5"></i>
                                 </div>
-                                <h6 class="mb-0 fw-semibold">{{ __('Purchases Summary') }}</h6>
+                                <h6 class="mb-0 fw-semibold">{{ __('Ringkasan Pembelian') }}</h6>
                             </div>
                             <ul class="list-unstyled text-muted small mb-0 ps-1">
-                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('Total purchases') }}</li>
-                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('Vendor/store breakdown') }}</li>
-                                <li><i class="ph ph-check-circle text-success me-1"></i> {{ __('Purchase receipt details') }}</li>
+                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('Total pembelian') }}</li>
+                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('Rincian per toko/vendor') }}</li>
+                                <li><i class="ph ph-check-circle text-success me-1"></i> {{ __('Detail nota pembelian') }}</li>
                             </ul>
                         </div>
                     </div>
@@ -157,12 +157,12 @@
                                 <div class="p-2 bg-danger bg-opacity-10 rounded-2">
                                     <i class="ph-fill ph-money text-danger fs-5"></i>
                                 </div>
-                                <h6 class="mb-0 fw-semibold">{{ __('Debts & Payments') }}</h6>
+                                <h6 class="mb-0 fw-semibold">{{ __('Hutang & Pembayaran') }}</h6>
                             </div>
                             <ul class="list-unstyled text-muted small mb-0 ps-1">
-                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('New debts created') }}</li>
-                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('Payments made') }}</li>
-                                <li><i class="ph ph-check-circle text-success me-1"></i> {{ __('Outstanding balance') }}</li>
+                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('Hutang baru dibuat') }}</li>
+                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('Pembayaran dilakukan') }}</li>
+                                <li><i class="ph ph-check-circle text-success me-1"></i> {{ __('Sisa hutang') }}</li>
                             </ul>
                         </div>
                     </div>
@@ -174,12 +174,12 @@
                                 <div class="p-2 bg-primary bg-opacity-10 rounded-2">
                                     <i class="ph-fill ph-package text-primary fs-5"></i>
                                 </div>
-                                <h6 class="mb-0 fw-semibold">{{ __('Inventory Snapshot') }}</h6>
+                                <h6 class="mb-0 fw-semibold">{{ __('Snapshot Inventaris') }}</h6>
                             </div>
                             <ul class="list-unstyled text-muted small mb-0 ps-1">
-                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('All products & stock levels') }}</li>
-                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('Total inventory value') }}</li>
-                                <li><i class="ph ph-check-circle text-success me-1"></i> {{ __('Low & out-of-stock alerts') }}</li>
+                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('Semua barang & level stok') }}</li>
+                                <li class="mb-1"><i class="ph ph-check-circle text-success me-1"></i> {{ __('Nilai total inventaris') }}</li>
+                                <li><i class="ph ph-check-circle text-success me-1"></i> {{ __('Peringatan stok rendah & habis') }}</li>
                             </ul>
                         </div>
                     </div>
@@ -228,9 +228,9 @@
     const reportForm = document.getElementById('reportForm');
 
     const helpTexts = {
-        weekly: 'The report will cover the week containing this date.',
-        monthly: 'The report will cover the entire month of this date.',
-        yearly: 'The report will cover the entire year of this date.',
+        weekly: 'Laporan akan mencakup minggu yang berisi tanggal ini.',
+        monthly: 'Laporan akan mencakup seluruh bulan pada tanggal ini.',
+        yearly: 'Laporan akan mencakup seluruh tahun pada tanggal ini.',
     };
 
     periodRadios.forEach(radio => {

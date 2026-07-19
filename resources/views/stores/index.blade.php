@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('page_title', 'Stores Management')
+@section('page_title', 'Manajemen Toko')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -8,8 +8,8 @@
             <i class="ph-bold ph-arrow-left"></i>
         </a>
         <div>
-            <h2 class="mb-1">Stores & Vendors</h2>
-            <p class="text-muted mb-0">Manage all your supplier and vendor details.</p>
+            <h2 class="mb-1">Toko & Supplier</h2>
+            <p class="text-muted mb-0">Kelola semua detail supplier dan toko Anda.</p>
         </div>
     </div>
     <div>
@@ -50,7 +50,7 @@
                     <tr>
                         <th class="ps-4">ID</th>
                         <th>{{ __('Store Name') }}</th>
-                        <th>Address</th>
+                        <th>Alamat</th>
                         <th>{{ __('Phone') }}</th>
                         <th class="text-end pe-4">{{ __('Actions') }}</th>
                     </tr>
@@ -69,7 +69,7 @@
                             </td>
                             <td>
                                 <span class="text-muted text-truncate d-inline-block" style="max-width: 250px;">
-                                    {{ $store->address ?? 'No address provided' }}
+                                    {{ $store->address ?? 'Tidak ada alamat' }}
                                 </span>
                             </td>
                             <td>
@@ -87,7 +87,7 @@
                                     <a href="{{ route('stores.edit', $store->id) }}" class="btn btn-sm btn-light text-primary border" title="{{ __('Edit') }}">
                                         <i class="ph-bold ph-pencil-simple"></i>
                                     </a>
-                                    <form action="{{ route('stores.destroy', $store->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this store?');">
+                                    <form action="{{ route('stores.destroy', $store->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus toko ini?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-light text-danger border" title="{{ __('Delete') }}">

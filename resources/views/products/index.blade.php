@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('page_title', 'Products Inventory')
+@section('page_title', 'Inventaris Barang')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -8,7 +8,7 @@
             <i class="ph-bold ph-arrow-left"></i>
         </a>
         <div>
-            <h2 class="mb-1">{{ __('Products Inventory') }}</h2>
+            <h2 class="mb-1">{{ __('Inventaris Barang') }}</h2>
             <p class="text-muted mb-0">{{ __('Manage all items, pricing, and stock levels.') }}</p>
         </div>
     </div>

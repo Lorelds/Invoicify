@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('page_title', 'Product Details')
+@section('page_title', 'Detail Barang')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -8,14 +8,14 @@
             <i class="ph-bold ph-arrow-left"></i>
         </a>
         <div>
-            <h2 class="mb-1">Product Details</h2>
+            <h2 class="mb-1">Detail Barang</h2>
             <p class="text-muted mb-0">View complete information and history for {{ $product->name }}</p>
         </div>
     </div>
     <div class="d-flex gap-2">
         @if(auth()->check() && auth()->user()->role === 'super_admin')
         <a href="{{ route('products.edit', $product->id) }}" class="btn btn-primary">
-            <i class="ph-bold ph-pencil-simple"></i>{{ __('Edit Product') }}</a>
+            <i class="ph-bold ph-pencil-simple"></i>{{ __('Ubah Barang') }}</a>
         @endif
     </div>
 </div>

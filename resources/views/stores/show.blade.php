@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('page_title', 'Store Details')
+@section('page_title', 'Detail Toko')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -24,7 +24,7 @@
 </div>
 
 <div class="row">
-    <!-- Store Details Column -->
+    <!-- Detail Toko Column -->
     <div class="col-lg-4 mb-4 mb-lg-0">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
@@ -36,8 +36,8 @@
                     <div class="fw-semibold fs-5 text-dark">{{ $store->name }}</div>
                 </div>
                 <div class="mb-4">
-                    <div class="text-muted small mb-1">Address</div>
-                    <div class="fw-medium text-dark">{{ $store->address ?? 'No address provided' }}</div>
+                    <div class="text-muted small mb-1">Alamat</div>
+                    <div class="fw-medium text-dark">{{ $store->address ?? 'Tidak ada alamat' }}</div>
                 </div>
                 <div class="mb-4">
                     <div class="text-muted small mb-1">Phone Number</div>
