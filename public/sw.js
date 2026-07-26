@@ -1,4 +1,4 @@
-const CACHE_NAME = 'invoicify-cache-v1';
+const CACHE_NAME = 'invoicify-cache-v2';
 const OFFLINE_URL = '/offline';
 
 const urlsToCache = [

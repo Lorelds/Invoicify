@@ -114,9 +114,20 @@
                             </td>
                             <td class="text-end pe-4">
                                 @if($receipt->status == 'pending')
-                                    <a href="{{ route('admin.receipts.validate', $receipt->id) }}" class="btn btn-sm btn-outline-warning">
-                                        <i class="ph-bold ph-check-square-offset"></i> Validasi
-                                    </a>
+                                    <div class="btn-group">
+                                        <a href="{{ route('admin.receipts.validate', $receipt->id) }}" class="btn btn-sm btn-outline-warning">
+                                            <i class="ph-bold ph-check-square-offset"></i> Validasi
+                                        </a>
+                                        @if(auth()->check() && auth()->user()->role === 'super_admin')
+                                        <form action="{{ route('admin.receipts.destroy', $receipt->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus nota yang belum divalidasi ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-light border text-danger" title="Hapus Nota">
+                                                <i class="ph-bold ph-trash"></i>
+                                            </button>
+                                        </form>
+                                        @endif
+                                    </div>
                                 @else
                                     <div class="btn-group">
                                         <a href="{{ route('admin.receipts.show', $receipt->id) }}" class="btn btn-sm btn-light border text-primary">

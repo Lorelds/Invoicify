@@ -161,6 +161,18 @@ class ReceiptController extends Controller
             \Log::error('Gemini API Error: ' . $response->body());
         }
 
+        // Calculate total amount from items to ensure consistency with validation page
+        $calculatedTotal = 0;
+        if (!empty($parsedData['items']) && is_array($parsedData['items'])) {
+            foreach ($parsedData['items'] as $item) {
+                $qty = isset($item['quantity']) ? (float)$item['quantity'] : 1;
+                $measure = isset($item['measure']) && $item['measure'] > 0 ? (float)$item['measure'] : 1;
+                $price = isset($item['unit_price']) ? (float)$item['unit_price'] : 0;
+                $calculatedTotal += ($qty * $measure * $price);
+            }
+        }
+        $totalAmount = $calculatedTotal > 0 ? $calculatedTotal : ($parsedData['total_amount'] ?? 0.00);
+
         // Create receipt record
         $receipt = Receipt::create([
             'store_id' => $request->store_id,
@@ -169,7 +181,7 @@ class ReceiptController extends Controller
             'receipt_number' => $parsedData['receipt_number'] ?? null,
             'store_name' => $parsedData['store_name'] ?? null,
             'transaction_date' => $parsedData['transaction_date'] ?? null,
-            'total_amount' => $parsedData['total_amount'] ?? 0.00,
+            'total_amount' => $totalAmount,
             'status' => 'pending',
             'type' => $request->type,
             'payment_status' => 'hutang', // Default to hutang, will be confirmed in validation
@@ -259,29 +271,30 @@ class ReceiptController extends Controller
 
     public function destroy(\App\Models\Receipt $receipt)
     {
-        // 1. Revert Inventory Stock
-        foreach ($receipt->items as $item) {
-            $product = \App\Models\Product::find($item->product_id);
-            if ($product) {
-                $product->stock -= $item->quantity;
-                // Ensure stock doesn't go below 0 just in case
-                if ($product->stock < 0) {
-                    $product->stock = 0;
+        // 1 & 2: Revert Inventory and Delete Debt only if the receipt was validated
+        if ($receipt->status === 'validated') {
+            foreach ($receipt->items as $item) {
+                $product = \App\Models\Product::find($item->product_id);
+                if ($product) {
+                    $product->stock -= $item->quantity;
+                    // Ensure stock doesn't go below 0 just in case
+                    if ($product->stock < 0) {
+                        $product->stock = 0;
+                    }
+                    $product->save();
                 }
-                $product->save();
             }
-        }
 
-        // 2. Delete related Debt (if any)
-        $debt = \App\Models\Debt::where('store_id', $receipt->store_id)
-            ->where('amount', $receipt->total_amount)
-            ->where('notes', 'like', '%#' . $receipt->id . '%')
-            ->first();
-            
-        if ($debt) {
-            // Also delete its payments
-            \App\Models\DebtPayment::where('debt_id', $debt->id)->delete();
-            $debt->delete();
+            $debt = \App\Models\Debt::where('store_id', $receipt->store_id)
+                ->where('amount', $receipt->total_amount)
+                ->where('notes', 'like', '%#' . $receipt->id . '%')
+                ->first();
+                
+            if ($debt) {
+                // Also delete its payments
+                \App\Models\DebtPayment::where('debt_id', $debt->id)->delete();
+                $debt->delete();
+            }
         }
 
         // 3. Delete Receipt Items (if DB cascade isn't set up)

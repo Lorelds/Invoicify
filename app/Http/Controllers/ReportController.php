@@ -32,12 +32,15 @@ class ReportController extends Controller
             'period' => 'required|in:weekly,monthly,yearly,custom',
             'format' => 'required|in:pdf,excel',
             'date'   => 'nullable|date',
+            'date_week' => 'nullable|string',
+            'date_month' => 'nullable|string',
+            'date_year' => 'nullable|integer',
             'start_date' => 'nullable|date',
             'end_date'   => 'nullable|date|after_or_equal:start_date',
         ]);
 
         // Determine date range
-        $dates = $this->getDateRange($request->period, $request->date, $request->start_date, $request->end_date);
+        $dates = $this->getDateRange($request->period, $request);
         $startDate = $dates['start'];
         $endDate = $dates['end'];
         $periodLabel = $dates['label'];
@@ -55,12 +58,23 @@ class ReportController extends Controller
         return $this->exportExcel($data, $filename);
     }
 
-    /**
-     * Calculate date range from period type.
-     */
-    private function getDateRange(string $period, ?string $date, ?string $startDate, ?string $endDate): array
+    private function getDateRange(string $period, Request $request): array
     {
-        $baseDate = $date ? Carbon::parse($date) : Carbon::now();
+        $baseDate = Carbon::now();
+
+        if ($period === 'weekly' && $request->filled('date_week')) {
+            // week format: "2024-W12"
+            $parts = explode('-W', $request->date_week);
+            if (count($parts) === 2) {
+                $baseDate = Carbon::now()->setISODate($parts[0], $parts[1]);
+            }
+        } elseif ($period === 'monthly' && $request->filled('date_month')) {
+            $baseDate = Carbon::parse($request->date_month . '-01');
+        } elseif ($period === 'yearly' && $request->filled('date_year')) {
+            $baseDate = Carbon::parse($request->date_year . '-01-01');
+        } elseif ($request->filled('date')) {
+            $baseDate = Carbon::parse($request->date);
+        }
 
         switch ($period) {
             case 'weekly':
@@ -79,8 +93,8 @@ class ReportController extends Controller
                 $label = 'Tahun ' . $baseDate->format('Y');
                 break;
             case 'custom':
-                $start = Carbon::parse($startDate)->startOfDay();
-                $end = Carbon::parse($endDate)->endOfDay();
+                $start = Carbon::parse($request->start_date)->startOfDay();
+                $end = Carbon::parse($request->end_date)->endOfDay();
                 $label = $start->format('d M Y') . ' - ' . $end->format('d M Y');
                 break;
             default:
@@ -97,8 +111,8 @@ class ReportController extends Controller
      */
     private function gatherReportData(Carbon $startDate, Carbon $endDate, string $periodLabel): array
     {
-        // Company name
-        $companyName = auth()->user()->company->name ?? 'My Company';
+        // Company name (use nullsafe operator)
+        $companyName = auth()->user()->company?->name ?? 'My Company';
 
         // --- SALES SUMMARY ---
         $totalSales = Receipt::where('status', 'validated')

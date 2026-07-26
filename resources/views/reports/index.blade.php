@@ -17,7 +17,7 @@
 <div class="row">
     <!-- Left: Report Configuration -->
     <div class="col-lg-5 mb-4">
-        <form action="{{ route('reports.generate') }}" method="POST" id="reportForm">
+        <form action="{{ route('reports.generate') }}" method="POST" id="reportForm" data-turbo="false">
             @csrf
 
             <!-- Period Card -->
@@ -48,29 +48,42 @@
                         </label>
                     </div>
 
-                    <!-- Standard Date Picker -->
-                    <div id="standardDateContainer">
-                        <label for="date" class="form-label fw-medium text-muted small">{{ __('Select Date') }}</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i class="ph ph-calendar text-muted"></i></span>
-                            <input type="date" class="form-control border-start-0 ps-0" id="date" name="date" value="{{ date('Y-m-d') }}">
+                    <!-- Specific Date Pickers -->
+                    <div id="datePickersContainer">
+                        <!-- Weekly -->
+                        <div id="weeklyContainer" class="date-picker-group">
+                            <label for="date_week" class="form-label fw-medium text-muted small">{{ __('Pilih Minggu') }}</label>
+                            <input type="week" class="form-control" id="date_week" name="date_week" value="{{ date('Y-\WW') }}">
+                            <div class="form-text mt-2"><i class="ph ph-info"></i> Laporan akan mencakup minggu yang dipilih.</div>
                         </div>
-                        <div class="form-text mt-2" id="dateHelpText">
-                            <i class="ph ph-info"></i> <span id="dateHelpContent">Laporan akan mencakup minggu yang berisi tanggal ini.</span>
-                        </div>
-                    </div>
 
-                    <!-- Custom Date Range Picker -->
-                    <div id="customDateContainer" style="display: none;">
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <label for="start_date" class="form-label fw-medium text-muted small">{{ __('Start Date') }}</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ date('Y-m-01') }}">
+                        <!-- Monthly -->
+                        <div id="monthlyContainer" class="date-picker-group" style="display: none;">
+                            <label for="date_month" class="form-label fw-medium text-muted small">{{ __('Pilih Bulan') }}</label>
+                            <input type="month" class="form-control" id="date_month" name="date_month" value="{{ date('Y-m') }}">
+                            <div class="form-text mt-2"><i class="ph ph-info"></i> Laporan akan mencakup seluruh bulan yang dipilih.</div>
+                        </div>
+
+                        <!-- Yearly -->
+                        <div id="yearlyContainer" class="date-picker-group" style="display: none;">
+                            <label for="date_year" class="form-label fw-medium text-muted small">{{ __('Pilih Tahun') }}</label>
+                            <input type="number" class="form-control" id="date_year" name="date_year" value="{{ date('Y') }}" min="2000" max="2099">
+                            <div class="form-text mt-2"><i class="ph ph-info"></i> Laporan akan mencakup seluruh tahun yang dipilih.</div>
+                        </div>
+
+                        <!-- Custom Date Range Picker -->
+                        <div id="customContainer" class="date-picker-group" style="display: none;">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label for="start_date" class="form-label fw-medium text-muted small">{{ __('Dari Tanggal') }}</label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ date('Y-m-01') }}">
+                                </div>
+                                <div class="col-6">
+                                    <label for="end_date" class="form-label fw-medium text-muted small">{{ __('Sampai Tanggal') }}</label>
+                                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ date('Y-m-d') }}">
+                                </div>
                             </div>
-                            <div class="col-6">
-                                <label for="end_date" class="form-label fw-medium text-muted small">{{ __('End Date') }}</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ date('Y-m-d') }}">
-                            </div>
+                            <div class="form-text mt-2"><i class="ph ph-info"></i> Laporan akan mencakup rentang tanggal ini (inklusif).</div>
                         </div>
                     </div>
                 </div>
@@ -221,27 +234,31 @@
 <script>
 (function() {
     const periodRadios = document.querySelectorAll('input[name="period"]');
-    const standardDateContainer = document.getElementById('standardDateContainer');
-    const customDateContainer = document.getElementById('customDateContainer');
-    const dateHelpContent = document.getElementById('dateHelpContent');
+    const weeklyContainer = document.getElementById('weeklyContainer');
+    const monthlyContainer = document.getElementById('monthlyContainer');
+    const yearlyContainer = document.getElementById('yearlyContainer');
+    const customContainer = document.getElementById('customContainer');
     const generateBtn = document.getElementById('generateBtn');
     const reportForm = document.getElementById('reportForm');
 
-    const helpTexts = {
-        weekly: 'Laporan akan mencakup minggu yang berisi tanggal ini.',
-        monthly: 'Laporan akan mencakup seluruh bulan pada tanggal ini.',
-        yearly: 'Laporan akan mencakup seluruh tahun pada tanggal ini.',
-    };
+    function hideAllContainers() {
+        weeklyContainer.style.display = 'none';
+        monthlyContainer.style.display = 'none';
+        yearlyContainer.style.display = 'none';
+        customContainer.style.display = 'none';
+    }
 
     periodRadios.forEach(radio => {
         radio.addEventListener('change', function() {
-            if (this.value === 'custom') {
-                standardDateContainer.style.display = 'none';
-                customDateContainer.style.display = 'block';
-            } else {
-                standardDateContainer.style.display = 'block';
-                customDateContainer.style.display = 'none';
-                dateHelpContent.textContent = helpTexts[this.value] || '';
+            hideAllContainers();
+            if (this.value === 'weekly') {
+                weeklyContainer.style.display = 'block';
+            } else if (this.value === 'monthly') {
+                monthlyContainer.style.display = 'block';
+            } else if (this.value === 'yearly') {
+                yearlyContainer.style.display = 'block';
+            } else if (this.value === 'custom') {
+                customContainer.style.display = 'block';
             }
         });
     });
@@ -254,7 +271,7 @@
         // Re-enable after 10 seconds (download should complete by then)
         setTimeout(() => {
             generateBtn.disabled = false;
-            generateBtn.innerHTML = '<i class="ph-bold ph-download-simple me-2"></i> Generate & Download Report';
+            generateBtn.innerHTML = '<i class="ph-bold ph-download-simple me-2"></i> {{ __('Generate & Download Report') }}';
         }, 10000);
     });
 })();

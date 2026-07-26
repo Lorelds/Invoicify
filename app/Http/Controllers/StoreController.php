@@ -45,18 +45,25 @@ class StoreController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:stores,name',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {
+            if ($request->wantsJson()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
         }
 
-        Store::create($request->all());
+        $store = Store::create($request->all());
+
+        if ($request->wantsJson()) {
+            return response()->json(['store' => $store, 'message' => __('Store created successfully.')]);
+        }
 
         return redirect()->route('stores.index')
             ->with('success', __('Store created successfully.'));
@@ -75,7 +82,7 @@ class StoreController extends Controller
     public function update(Request $request, Store $store)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:stores,name,' . $store->id,
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
         ]);

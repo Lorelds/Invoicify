@@ -18,6 +18,7 @@
     <div class="col-lg-8 mx-auto">
         <div class="card border-0 shadow-sm">
             <div class="card-body p-5">
+                <div id="pageAlerts"></div>
                 <form action="{{ route('admin.receipts.upload') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
                     @csrf
                     
@@ -57,7 +58,7 @@
                                 </select>
                             </div>
                             <div class="form-text mt-2">
-                                <a href="{{ route('stores.create') }}" class="text-decoration-none"><i class="ph-bold ph-plus"></i> Add new vendor</a>
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#addVendorModal" class="text-decoration-none"><i class="ph-bold ph-plus"></i> Add new vendor</a>
                             </div>
                             @error('store_id')
                                 <div class="text-danger mt-1 small">{{ $message }}</div>
@@ -90,6 +91,39 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Add Vendor Modal -->
+<div class="modal fade" id="addVendorModal" tabindex="-1" aria-labelledby="addVendorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="addVendorForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addVendorModalLabel">Add New Vendor</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div id="vendorAlert" class="alert alert-danger d-none"></div>
+            <div class="mb-3">
+                <label for="vendor_name" class="form-label fw-medium">Vendor Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="vendor_name" name="name" required>
+            </div>
+            <div class="mb-3">
+                <label for="vendor_phone" class="form-label fw-medium">Phone Number</label>
+                <input type="text" class="form-control" id="vendor_phone" name="phone">
+            </div>
+            <div class="mb-3">
+                <label for="vendor_address" class="form-label fw-medium">Address</label>
+                <textarea class="form-control" id="vendor_address" name="address" rows="2"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveVendorBtn">Save Vendor</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
 <!-- Loading Overlay -->
@@ -163,6 +197,85 @@
         const btn = document.getElementById('submitBtn');
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing OCR...';
         btn.disabled = true;
+    });
+
+    document.getElementById('addVendorForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('saveVendorBtn');
+        const alertBox = document.getElementById('vendorAlert');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+        alertBox.classList.add('d-none');
+        
+        const formData = new FormData(this);
+        
+        fetch('{{ route('stores.store') }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => response.json().then(data => ({ status: response.status, body: data })))
+        .then(res => {
+            if (res.status === 422) {
+                let errorMsg = '';
+                for (let field in res.body.errors) {
+                    errorMsg += res.body.errors[field][0] + '<br>';
+                }
+                alertBox.innerHTML = errorMsg;
+                alertBox.classList.remove('d-none');
+            } else if (res.status === 200 || res.status === 201) {
+                const store = res.body.store;
+                const select = document.getElementById('store_id');
+                const option = new Option(store.name, store.id, true, true);
+                select.add(option);
+                
+                // Hide modal reliably
+                const modalEl = document.getElementById('addVendorModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) {
+                    modal.hide();
+                } else {
+                    modalEl.classList.remove('show');
+                    modalEl.style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                }
+                
+                // Force remove backdrop if it gets stuck
+                setTimeout(() => {
+                    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                }, 300);
+                
+                document.getElementById('addVendorForm').reset();
+                
+                // Show success notification
+                const pageAlerts = document.getElementById('pageAlerts');
+                pageAlerts.innerHTML = `
+                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+                        <i class="ph-fill ph-check-circle fs-5 me-2"></i> Vendor <strong>${store.name}</strong> added successfully!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            } else {
+                alertBox.innerHTML = 'An unexpected error occurred.';
+                alertBox.classList.remove('d-none');
+            }
+        })
+        .catch(error => {
+            alertBox.innerHTML = 'Network error. Please try again.';
+            alertBox.classList.remove('d-none');
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = 'Save Vendor';
+        });
     });
 </script>
 @endpush
