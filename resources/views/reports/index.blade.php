@@ -100,7 +100,7 @@
                             <label class="btn btn-outline-danger w-100 py-3 d-flex flex-column align-items-center gap-2" for="formatPdf">
                                 <i class="ph-bold ph-file-pdf fs-2"></i>
                                 <span class="fw-semibold">PDF</span>
-                                <small class="text-muted">{{ __('Best for printing') }}</small>
+                                <small class="opacity-75">{{ __('Cocok untuk dicetak') }}</small>
                             </label>
                         </div>
                         <div class="col-6">
@@ -108,7 +108,7 @@
                             <label class="btn btn-outline-success w-100 py-3 d-flex flex-column align-items-center gap-2" for="formatExcel">
                                 <i class="ph-bold ph-file-xls fs-2"></i>
                                 <span class="fw-semibold">Excel</span>
-                                <small class="text-muted">{{ __('Best for analysis') }}</small>
+                                <small class="opacity-75">{{ __('Terbaik untuk analisis') }}</small>
                             </label>
                         </div>
                     </div>
