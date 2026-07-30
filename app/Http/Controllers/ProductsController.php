@@ -128,7 +128,7 @@ class ProductsController extends Controller
             $price_history_values[] = $product->buy_price;
         }
 
-        $stock_movements = $product->stockMovements()->with('receipt.store')->orderBy('created_at', 'desc')->get();
+        $stock_movements = $product->stockMovements()->with('receipt.store', 'user')->orderBy('created_at', 'desc')->get();
 
         return view('products.show', compact('product', 'price_history_dates', 'price_history_values', 'stock_movements'));
     }
@@ -248,6 +248,7 @@ class ProductsController extends Controller
 
         \App\Models\StockMovement::create([
             'product_id' => $product->id,
+            'user_id' => auth()->id(),
             'type' => $request->type,
             'quantity' => $request->quantity,
             'balance' => $newBalance,

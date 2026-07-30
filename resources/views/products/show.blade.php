@@ -152,6 +152,11 @@
                                         @else
                                             {{ $movement->notes }}
                                         @endif
+                                        @if($movement->user)
+                                            <div class="mt-1" style="font-size: 0.8em; opacity: 0.8;">
+                                                <i class="ph ph-user me-1"></i>By: {{ $movement->user->name }}
+                                            </div>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty

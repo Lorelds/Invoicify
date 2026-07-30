@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class StoreController extends Controller
 {
@@ -45,7 +46,14 @@ class StoreController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:stores,name',
+            'name' => [
+                'required', 
+                'string', 
+                'max:255', 
+                Rule::unique('stores', 'name')->where(function ($query) {
+                    return $query->where('company_id', auth()->user()->company_id ?? null);
+                })
+            ],
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
         ]);
@@ -82,7 +90,14 @@ class StoreController extends Controller
     public function update(Request $request, Store $store)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:stores,name,' . $store->id,
+            'name' => [
+                'required', 
+                'string', 
+                'max:255', 
+                Rule::unique('stores', 'name')->where(function ($query) {
+                    return $query->where('company_id', auth()->user()->company_id ?? null);
+                })->ignore($store->id)
+            ],
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
         ]);

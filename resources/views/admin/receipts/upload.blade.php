@@ -97,7 +97,7 @@
 <div class="modal fade" id="addVendorModal" tabindex="-1" aria-labelledby="addVendorModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form id="addVendorForm">
+      <form id="addVendorForm" onsubmit="window.submitVendorForm(event)">
         <div class="modal-header">
           <h5 class="modal-title" id="addVendorModalLabel">Add New Vendor</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -137,7 +137,21 @@
 @endsection
 
 @push('scripts')
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <script>
+    let storeSelect;
+    
+    document.addEventListener("DOMContentLoaded", function() {
+        storeSelect = new TomSelect("#store_id", {
+            create: false,
+            sortField: {
+                field: "text",
+                direction: "asc"
+            }
+        });
+    });
+
     function showFileName(input) {
         const fileNameElement = document.getElementById('fileName');
         const dropZone = document.getElementById('dropZone');
@@ -199,16 +213,17 @@
         btn.disabled = true;
     });
 
-    document.getElementById('addVendorForm').addEventListener('submit', function(e) {
+    window.submitVendorForm = function(e) {
         e.preventDefault();
         
+        const form = document.getElementById('addVendorForm');
         const btn = document.getElementById('saveVendorBtn');
         const alertBox = document.getElementById('vendorAlert');
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
         alertBox.classList.add('d-none');
         
-        const formData = new FormData(this);
+        const formData = new FormData(form);
         
         fetch('{{ route('stores.store') }}', {
             method: 'POST',
@@ -229,9 +244,14 @@
                 alertBox.classList.remove('d-none');
             } else if (res.status === 200 || res.status === 201) {
                 const store = res.body.store;
-                const select = document.getElementById('store_id');
-                const option = new Option(store.name, store.id, true, true);
-                select.add(option);
+                if (typeof storeSelect !== 'undefined' && storeSelect) {
+                    storeSelect.addOption({value: store.id, text: store.name});
+                    storeSelect.addItem(store.id);
+                } else {
+                    const select = document.getElementById('store_id');
+                    const option = new Option(store.name, store.id, true, true);
+                    select.add(option);
+                }
                 
                 // Hide modal reliably
                 const modalEl = document.getElementById('addVendorModal');
@@ -252,7 +272,7 @@
                     document.body.style.paddingRight = '';
                 }, 300);
                 
-                document.getElementById('addVendorForm').reset();
+                form.reset();
                 
                 // Show success notification
                 const pageAlerts = document.getElementById('pageAlerts');
@@ -276,6 +296,6 @@
             btn.disabled = false;
             btn.innerHTML = 'Save Vendor';
         });
-    });
+    };
 </script>
 @endpush

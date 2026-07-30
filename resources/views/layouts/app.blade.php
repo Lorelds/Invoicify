@@ -82,12 +82,20 @@
                 </div>
                 <div class="d-flex align-items-center gap-3">
                     
+                    @if(auth()->user() && auth()->user()->role === 'super_admin')
+                    <form method="POST" action="{{ route('backup.download') }}" data-turbo="false" class="m-0">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-primary d-flex align-items-center">
+                            <i class="ph-bold ph-database me-1"></i> Backup DB
+                        </button>
+                    </form>
+                    @endif
 
                     <div class="d-flex align-items-center gap-2 ms-2">
                         <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'User') }}&background=0ea5e9&color=fff" alt="User" class="rounded-circle" width="36" height="36">
                         <span class="fw-medium">{{ auth()->user()->name ?? 'User' }}</span>
                         
-                        <form method="POST" action="{{ route('logout') }}" class="ms-3">
+                        <form method="POST" action="{{ route('logout') }}" class="ms-3 m-0">
                             @csrf
                             <button type="submit" class="btn btn-sm btn-outline-danger">
                                 <i class="ph-bold ph-sign-out me-1"></i> {{ __('Keluar') }}

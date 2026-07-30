@@ -16,6 +16,7 @@ class StockMovement extends Model
     protected $fillable = [
         'product_id',
         'receipt_id',
+        'user_id',
         'type',
         'quantity',
         'balance',
@@ -30,5 +31,10 @@ class StockMovement extends Model
     public function receipt()
     {
         return $this->belongsTo(Receipt::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

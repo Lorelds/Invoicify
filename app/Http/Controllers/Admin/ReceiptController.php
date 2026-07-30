@@ -393,6 +393,7 @@ class ReceiptController extends Controller
                 \App\Models\StockMovement::create([
                     'product_id' => $product->id,
                     'receipt_id' => $receipt->id,
+                    'user_id' => auth()->id(),
                     'type' => 'in',
                     'quantity' => $itemData['quantity'],
                     'balance' => $newBalance,
@@ -405,6 +406,7 @@ class ReceiptController extends Controller
                 \App\Models\StockMovement::create([
                     'product_id' => $product->id,
                     'receipt_id' => $receipt->id,
+                    'user_id' => auth()->id(),
                     'type' => 'out',
                     'quantity' => $itemData['quantity'],
                     'balance' => $newBalance,

@@ -73,6 +73,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/generate', [\App\Http\Controllers\ReportController::class, 'generate'])->name('generate');
     });
 
+    // Backup Routes
+    Route::post('/backup/download', [\App\Http\Controllers\BackupController::class, 'download'])->name('backup.download')->middleware('super_admin');
+
     // Breeze Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
