@@ -9,6 +9,15 @@ use Illuminate\Support\Facades\Validator;
 
 class ProductsController extends Controller
 {
+    public function history(Request $request)
+    {
+        $movements = \App\Models\StockMovement::with(['product', 'receipt.store', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('products.history', compact('movements'));
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -199,21 +208,62 @@ class ProductsController extends Controller
     }
 
     // Generate SKU from product name
+    // Format: 3-4 letter abbreviation (first letter of each word) + numbers from name, ALL CAPS
+    // e.g. "Paku Raja 5" → "PR5", "Kawat BWG 10" → "KB10", "Asbes 180" → "ASB180"
     private function generateSKU($name)
     {
-        // Take first 3 letters of each word, uppercase
-        $words = preg_split('/[\s\-_]+/', $name);
-        $skuParts = array_map(function($word) {
-            return strtoupper(substr($word, 0, min(3, strlen($word))));
-        }, $words);
+        // Split into words, remove special chars like @
+        $cleanName = preg_replace('/[@#]/', '', $name);
+        $words = preg_split('/[\s\-_\/]+/', $cleanName);
 
-        $sku = implode('', $skuParts);
+        $letters = '';
+        $numbers = '';
 
-        // Ensure uniqueness by adding timestamp if needed
+        foreach ($words as $word) {
+            $word = trim($word);
+            if ($word === '') continue;
+
+            // If word is purely numeric, treat as the size/quantity part
+            if (preg_match('/^\d+$/', $word)) {
+                $numbers .= $word;
+            } else {
+                // Extract leading letters for abbreviation, and trailing numbers
+                if (preg_match('/^([a-zA-Z]+)(\d*)$/', $word, $m)) {
+                    $letters .= strtoupper(substr($m[1], 0, 1));
+                    if ($m[2] !== '') {
+                        $numbers .= $m[2];
+                    }
+                } else {
+                    // Mixed/special word — just take first letter
+                    $firstChar = substr(preg_replace('/[^a-zA-Z]/', '', $word), 0, 1);
+                    if ($firstChar) {
+                        $letters .= strtoupper($firstChar);
+                    }
+                    // Extract any digits
+                    $digits = preg_replace('/[^\d]/', '', $word);
+                    if ($digits) {
+                        $numbers .= $digits;
+                    }
+                }
+            }
+        }
+
+        // Ensure letters part is 2-4 chars (pad with extra chars from first word if only 1 letter)
+        if (strlen($letters) < 2 && count($words) > 0) {
+            $firstWord = preg_replace('/[^a-zA-Z]/', '', $words[0]);
+            $letters = strtoupper(substr($firstWord, 0, 3));
+        }
+
+        // Cap letters at 4 characters max
+        $letters = substr($letters, 0, 4);
+
+        $sku = $letters . $numbers;
+
+        // Ensure uniqueness
         $baseSku = $sku;
         $counter = 1;
         while (Product::where('sku', $sku)->exists()) {
-            $sku = $baseSku . $counter;
+            $sku = $baseSku . '-' . $counter;
             $counter++;
         }
 

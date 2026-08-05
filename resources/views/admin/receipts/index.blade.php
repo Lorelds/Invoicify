@@ -81,7 +81,9 @@
                 <tbody>
                     @forelse($receipts as $receipt)
                         <tr>
-                            <td class="ps-4 fw-medium text-primary">#{{ $receipt->receipt_number ?? str_pad($receipt->id, 5, '0', STR_PAD_LEFT) }}</td>
+                            <td class="ps-4 fw-medium text-primary">
+                                #{{ $receipt->receipt_number ?? str_pad($receipt->id, 5, '0', STR_PAD_LEFT) }}
+                            </td>
                             <td>{{ $receipt->transaction_date ? \Carbon\Carbon::parse($receipt->transaction_date)->format('d M Y') : 'Unknown' }}</td>
                             <td>
                                 @if($receipt->store)

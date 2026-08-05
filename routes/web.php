@@ -40,12 +40,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/{receipt}/show', [ReceiptController::class, 'show'])->name('show');
         Route::get('/{receipt}/validate', [ReceiptController::class, 'validate'])->name('validate');
         Route::post('/{receipt}/validate', [ReceiptController::class, 'validateSubmit'])->name('validateSubmit');
+        Route::post('/{receipt}/upload-image', [ReceiptController::class, 'uploadImage'])->name('uploadImage');
         
         // Super Admin only
         Route::delete('/{receipt}', [ReceiptController::class, 'destroy'])->name('destroy')->middleware('super_admin');
     });
 
     // Products Routes
+    Route::get('stock-history', [ProductsController::class, 'history'])->name('products.history');
     Route::post('products/{product}/adjust-stock', [ProductsController::class, 'adjustStock'])->name('products.adjust_stock');
     Route::resource('products', ProductsController::class)->except(['edit', 'update', 'destroy']);
     Route::resource('products', ProductsController::class)->only(['edit', 'update', 'destroy'])->middleware('super_admin');

@@ -80,121 +80,256 @@ class ReceiptController extends Controller
     {
         // Validate request
         $validator = Validator::make($request->all(), [
-            'receipt_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'store_id' => 'required|exists:stores,id',
+            'receipt_images' => $request->action === 'scan' ? 'required|array|min:1' : 'nullable|array',
+            'receipt_images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'store_id' => 'nullable|exists:stores,id',
             'type' => 'required|in:pembelian,penjualan',
         ]);
 
         if ($validator->fails()) {
+            if ($request->wantsJson()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
         }
 
-        // Store the uploaded image
-        $imagePath = $request->file('receipt_image')->store('receipts', 'public');
-
-        // Get full path for Tesseract processing
-        $fullImagePath = Storage::disk('public')->path($imagePath);
-
-        // Use Gemini API instead of Tesseract
-        $apiKey = config('services.gemini.key');
+        $uploadedReceipts = [];
+        $apiErrors = [];
         
-        $base64Image = base64_encode(file_get_contents($fullImagePath));
-        $mimeType = mime_content_type($fullImagePath);
-
-        $prompt = "Extract the receipt details into JSON. This is an Indonesian hardware store (toko bangunan) receipt with handwritten items. Common items include 'Pasir', 'Besi Polos' or 'Polos', 'Besi Ulir', 'Semen', 'Paku', 'Bendrat', 'Pipa', etc. Be very careful with messy handwriting (e.g. read 'Polos' instead of 'Plor' or 'Pdor'). We need the following fields exactly: 'receipt_number' (string, e.g. from 'No. Nota'), 'store_name' (string), 
-        'transaction_date' (YYYY-MM-DD format), 'total_amount' (number), and an array of 'items' containing 'name' (string),
-        'quantity' (raw quantity from the leftmost column, number), 'measure' (extract the multiplier like 6 for 6m or 25 for 25kg, default to 1, number), 
-        'unit_price' (number), 'subtotal' (number). If a field is not found, leave it null or 0. Respond with ONLY the JSON object, nothing else.";
-
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-        ])->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' . $apiKey, [
-            'contents' => [
-                [
-                    'parts' => [
-                        ['text' => $prompt],
-                        [
-                            'inlineData' => [
-                                'mimeType' => $mimeType,
-                                'data' => $base64Image
-                            ]
-                        ]
-                    ]
-                ]
-            ],
-            'generationConfig' => [
-                'responseMimeType' => 'application/json',
-            ]
-        ]);
-
-        $rawText = "AI Extracted Data";
-        $parsedData = [
-            'receipt_number' => null,
-            'store_name' => null,
-            'transaction_date' => null,
-            'total_amount' => 0,
-            'items' => []
-        ];
-        $apiError = null;
-
-        if ($response->successful()) {
-            $responseData = $response->json();
-            $content = $responseData['candidates'][0]['content']['parts'][0]['text'] ?? '{}';
-            
-            // Clean up any markdown code blocks if gemini returns them despite response_mime_type
-            $content = preg_replace('/```json\s*/', '', $content);
-            $content = preg_replace('/```\s*/', '', $content);
-            
-            $aiData = json_decode($content, true);
-            if (is_array($aiData)) {
-                $parsedData = array_merge($parsedData, $aiData);
-                $rawText = json_encode($parsedData, JSON_PRETTY_PRINT);
-                
-                // Keep ai items in session so validate page can use them
-                session()->put('ai_receipt_items_' . $imagePath, $parsedData['items'] ?? []);
-            }
+        // Handle fully manual entry with no image uploaded
+        if ($request->action === 'manual' && !$request->hasFile('receipt_images')) {
+            $receipt = Receipt::create([
+                'store_id' => $request->store_id,
+                'image_path' => null,
+                'raw_text' => '{}',
+                'receipt_number' => null,
+                'store_name' => null,
+                'transaction_date' => date('Y-m-d'),
+                'total_amount' => 0,
+                'status' => 'pending',
+                'type' => $request->type,
+                'payment_status' => 'hutang',
+            ]);
+            $uploadedReceipts[] = $receipt;
         } else {
-            $errorBody = $response->json();
-            $apiError = $errorBody['error']['message'] ?? 'The AI model is currently unavailable or busy. Please enter items manually.';
-            \Log::error('Gemini API Error: ' . $response->body());
-        }
+            $apiKey = config('services.gemini.key');
+            
+            foreach ($request->file('receipt_images') as $file) {
+                // Store the uploaded image
+                $imagePath = $file->store('receipts', 'public');
+                $fullImagePath = Storage::disk('public')->path($imagePath);
 
-        // Calculate total amount from items to ensure consistency with validation page
-        $calculatedTotal = 0;
-        if (!empty($parsedData['items']) && is_array($parsedData['items'])) {
-            foreach ($parsedData['items'] as $item) {
-                $qty = isset($item['quantity']) ? (float)$item['quantity'] : 1;
-                $measure = isset($item['measure']) && $item['measure'] > 0 ? (float)$item['measure'] : 1;
-                $price = isset($item['unit_price']) ? (float)$item['unit_price'] : 0;
-                $calculatedTotal += ($qty * $measure * $price);
+                $rawText = "{}";
+                $parsedData = [
+                    'receipt_number' => null,
+                    'store_name' => null,
+                    'transaction_date' => null,
+                    'total_amount' => 0,
+                    'items' => []
+                ];
+                
+                // Only run AI if the action is scan
+                if ($request->action === 'scan') {
+                    $base64Image = base64_encode(file_get_contents($fullImagePath));
+                    $mimeType = mime_content_type($fullImagePath);
+
+                    $prompt = "Extract this Indonesian hardware store receipt into JSON.
+            FIELDS TO EXTRACT:
+            - 'receipt_number' (string)
+            - 'store_name' (string)
+            - 'transaction_date' (YYYY-MM-DD)
+            - 'total_amount' (number)
+            - 'items' (array of objects):
+              * 'name' (string). EXACT name on receipt. 
+                 RULE: If the name contains the standalone letter 'R' (e.g., 'Paku R', 'Paku 5 R'), change 'R' to 'Raja' (e.g., 'Paku Raja', 'Paku 5 Raja'). 
+                 NEGATIVE RULE: If it does NOT contain 'R' (e.g., 'Paku 5', 'Paku'), leave it EXACTLY as 'Paku 5' or 'Paku'. Do NOT add 'Raja'.
+                 RULE: If the name contains 'GW' (e.g., 'GW 030'), change 'GW' to 'GLV' (e.g., 'GLV 030').
+                 RULE: If the name contains 'Bendrat' or '@20' or '@25' or 'C 20g', you MUST format the name EXACTLY as 'Bendrat @ 20 kg' or 'Bendrat @ 25 kg' depending on the number. NEVER leave it as just '@20g'.
+              * 'category' (string). Guess (e.g., Paku, Kayu, Besi, Semen, Cat, Pipa, Kawat).
+              * 'quantity' (number). Raw number from the quantity column.
+              * 'measure' (number). YOU MUST LOOK AT THE NAME AND SET THIS NUMBER:
+                 - 'Paku Seng': 20
+                 - 'Paku' (but not Seng): 30
+                 - 'Begel' or 'Cornice': 20
+                 - 'GLV': ALWAYS 50 (ignore other numbers in name)
+                 - 'Karpet' or 'Seng': 50
+                 - 'Kawat' (size 8, 10, 12, 14, 16): 50
+                 - 'Kawat' (size 18, 20): 25
+                 - 'Bendrat': STRICTLY 20 (if name has 20) or 25 (if name has 25).
+                 - 'Fiber Gel': Extract meters from cm (e.g., 180=1.8, 210=2.1, 240=2.4, 300=3)
+                 - 'Board adimas', 'Shica', 'Bondex', 'UPVC', 'PVC', 'Spandek': Extract the length number from the name (e.g., 3m = 3, 4m = 4)
+                 - 'Hollow', 'Kanal', 'Nok', 'Wuwung', 'Talang Kotak', 'Wermes', 'Pagar', 'Stall', 'Semen', 'Genteng', 'Asbes', 'Gelombang', 'Gel', 'Reng', 'Lisplang': ALWAYS 1 (ignore length/kg in name)
+                 - ALL OTHER ITEMS: if it has length (e.g., '3m', '4m') extract the number, otherwise 1
+              * 'subtotal' (number). The total price for this row. IMPORTANT: Remove all dots and commas (e.g., '15.000' becomes 15000).
+              * 'unit_price' (number). The written price per item. Remove dots/commas.
+                 CRITICAL RULE FOR BRACKETS \"}\" : If multiple items share ONE price via a bracket, YOU MUST COPY THAT EXACT UNIT PRICE TO EVERY SINGLE ITEM IN THE BRACKET! Never leave it 0.
+
+            Return ONLY valid JSON. No markdown, no explanations.";
+
+                    $response = Http::timeout(120)->connectTimeout(30)->withHeaders([
+                        'Content-Type' => 'application/json',
+                    ])->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=' . $apiKey, [
+                        'contents' => [
+                            [
+                                'parts' => [
+                                    ['text' => $prompt],
+                                    [
+                                        'inlineData' => [
+                                            'mimeType' => $mimeType,
+                                            'data' => $base64Image
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'generationConfig' => [
+                            'responseMimeType' => 'application/json',
+                        ]
+                    ]);
+
+                    if ($response->successful()) {
+                        $responseData = $response->json();
+                        $content = $responseData['candidates'][0]['content']['parts'][0]['text'] ?? '{}';
+                        
+                        // Clean up any markdown code blocks
+                        $content = preg_replace('/```json\s*/', '', $content);
+                        $content = preg_replace('/```\s*/', '', $content);
+                        
+                        $aiData = json_decode($content, true);
+                        if (is_array($aiData)) {
+                            $parsedData = array_merge($parsedData, $aiData);
+                            $rawText = json_encode($parsedData, JSON_PRETTY_PRINT);
+                            
+                            session()->put('ai_receipt_items_' . $imagePath, $parsedData['items'] ?? []);
+                        }
+                    } else {
+                        $errorBody = $response->json();
+                        $apiError = $errorBody['error']['message'] ?? 'The AI model is currently unavailable or busy. Please enter items manually.';
+                        \Log::error('Gemini API Error: ' . $response->body());
+                        $apiErrors[] = $apiError;
+                    }
+                }
+
+                $calculatedTotal = 0;
+                if (!empty($parsedData['items']) && is_array($parsedData['items'])) {
+                    foreach ($parsedData['items'] as &$item) {
+                        $qty = isset($item['quantity']) && $item['quantity'] > 0 ? (float)$item['quantity'] : 1;
+                        $measure = isset($item['measure']) && $item['measure'] > 0 ? (float)$item['measure'] : 1;
+                        $price = isset($item['unit_price']) ? (float)$item['unit_price'] : 0;
+                        $subtotal = isset($item['subtotal']) ? (float)$item['subtotal'] : 0;
+
+                        if ($subtotal > 0 && $price == 0) {
+                             // AI only extracted subtotal, we calculate price
+                             $price = $subtotal / ($qty * $measure);
+                             $item['unit_price'] = round($price, 2);
+                        } else {
+                             // Force subtotal to be mathematically perfect based on the unit price.
+                             // This fixes bracket issues where AI gives the grand total of the bracket to one row.
+                             $item['subtotal'] = round($qty * $measure * $price, 2);
+                        }
+
+                        $calculatedTotal += ($qty * $measure * $price);
+                    }
+                    unset($item);
+                    
+                    // Re-encode rawText and update session with mathematically perfect items
+                    if ($request->action === 'scan') {
+                        $rawText = json_encode($parsedData, JSON_PRETTY_PRINT);
+                        session()->put('ai_receipt_items_' . $imagePath, $parsedData['items']);
+                    }
+                }
+                $totalAmount = $calculatedTotal > 0 ? $calculatedTotal : ($parsedData['total_amount'] ?? 0.00);
+
+                // Determine the correct Store ID dynamically based on AI's extraction if not manually selected
+                $storeId = $request->store_id;
+                
+                if (empty($storeId) && !empty($parsedData['store_name'])) {
+                    $scannedStoreName = trim($parsedData['store_name']);
+                    $allStores = \App\Models\Store::all();
+                    $bestMatch = null;
+                    $highestSimilarity = 0;
+                    
+                    foreach ($allStores as $s) {
+                        $storeNameDb = strtolower($s->name);
+                        $storeNameScan = strtolower($scannedStoreName);
+                        
+                        // 1. Direct or partial match
+                        if ($storeNameDb === $storeNameScan || strpos($storeNameDb, $storeNameScan) !== false || strpos($storeNameScan, $storeNameDb) !== false) {
+                            $bestMatch = $s;
+                            $highestSimilarity = 100;
+                            break;
+                        }
+                        
+                        // 2. Fuzzy match to handle typos
+                        similar_text($storeNameDb, $storeNameScan, $percent);
+                        if ($percent > $highestSimilarity) {
+                            $highestSimilarity = $percent;
+                            $bestMatch = $s;
+                        }
+                    }
+                    
+                    // If similarity is above 75%, it's highly likely a match with a typo
+                    if ($bestMatch && $highestSimilarity >= 75) {
+                        $storeId = $bestMatch->id;
+                        $parsedData['store_name'] = $bestMatch->name; // Normalize the parsed data name
+                    } else {
+                        // Create a new store if it's completely unmatched
+                        $newStore = \App\Models\Store::create([
+                            'name' => $scannedStoreName
+                        ]);
+                        $storeId = $newStore->id;
+                    }
+                    
+                    // Update rawText with normalized name if matched
+                    $rawText = json_encode($parsedData, JSON_PRETTY_PRINT);
+                }
+
+                // Create receipt record
+                $receipt = Receipt::create([
+                    'store_id' => $storeId,
+                    'image_path' => $imagePath,
+                    'raw_text' => $rawText,
+                    'receipt_number' => $parsedData['receipt_number'] ?? null,
+                    'store_name' => $parsedData['store_name'] ?? null,
+                    'transaction_date' => $parsedData['transaction_date'] ?? date('Y-m-d'),
+                    'total_amount' => $totalAmount,
+                    'status' => 'pending',
+                    'type' => $request->type,
+                    'payment_status' => 'hutang',
+                ]);
+                
+                $uploadedReceipts[] = $receipt;
             }
         }
-        $totalAmount = $calculatedTotal > 0 ? $calculatedTotal : ($parsedData['total_amount'] ?? 0.00);
 
-        // Create receipt record
-        $receipt = Receipt::create([
-            'store_id' => $request->store_id,
-            'image_path' => $imagePath,
-            'raw_text' => $rawText,
-            'receipt_number' => $parsedData['receipt_number'] ?? null,
-            'store_name' => $parsedData['store_name'] ?? null,
-            'transaction_date' => $parsedData['transaction_date'] ?? null,
-            'total_amount' => $totalAmount,
-            'status' => 'pending',
-            'type' => $request->type,
-            'payment_status' => 'hutang', // Default to hutang, will be confirmed in validation
-        ]);
-
-        if ($apiError) {
-            return redirect()->route('admin.receipts.validate', $receipt->id)
-                ->withErrors(['ai_error' => 'AI Extraction Failed: ' . $apiError]);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'receipt_id' => count($uploadedReceipts) === 1 ? $uploadedReceipts[0]->id : null,
+                'api_errors' => $apiErrors
+            ]);
         }
 
-        // Redirect to validation page
-        return redirect()->route('admin.receipts.validate', $receipt->id)
-            ->with('success', __('Receipt uploaded successfully. Please validate the extracted data.'));
+        if (count($uploadedReceipts) === 1) {
+            $receipt = $uploadedReceipts[0];
+            if (!empty($apiErrors)) {
+                return redirect()->route('admin.receipts.validate', $receipt->id)
+                    ->withErrors(['ai_error' => 'AI Extraction Failed: ' . $apiErrors[0]]);
+            }
+            return redirect()->route('admin.receipts.validate', $receipt->id)
+                ->with('success', __('Receipt uploaded successfully. Please validate the extracted data.'));
+        }
+
+        // Multiple receipts uploaded
+        $message = count($uploadedReceipts) . ' ' . __('receipts uploaded successfully.');
+        if (!empty($apiErrors)) {
+            $message .= ' ' . __('However, some encountered AI extraction errors.');
+        }
+
+        return redirect()->route('admin.receipts.index')
+            ->with('success', $message . ' ' . __('Please validate them from the list below.'));
     }
 
     // Show validation form
@@ -203,6 +338,7 @@ class ReceiptController extends Controller
         $receipt = Receipt::with('store')->findOrFail($id);
         $stores = Store::all();
         $categories = Product::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category');
+        $productNames = Product::select('name')->distinct()->pluck('name');
         
         // Use session items if available, or parse raw JSON
         $parsedData = json_decode($receipt->raw_text, true) ?? [];
@@ -216,12 +352,43 @@ class ReceiptController extends Controller
                 ->with('info', __('This receipt has already been validated.'));
         }
 
-        return view('admin.receipts.validate', compact('receipt', 'stores', 'categories', 'parsedData'));
+        return view('admin.receipts.validate', compact('receipt', 'stores', 'categories', 'productNames', 'parsedData'));
     }
 
     // Handle validation and save data
     public function validateSubmit(Request $request, $id)
     {
+        $receipt = Receipt::findOrFail($id);
+
+        if ($request->action === 'draft') {
+            $storeId = $request->store_id;
+            if ($request->filled('new_store')) {
+                $store = Store::firstOrCreate(['name' => $request->new_store]);
+                $storeId = $store->id;
+            }
+            
+            $draftData = [
+                'receipt_number' => $request->receipt_number,
+                'store_name' => $storeId ? Store::find($storeId)->name : $request->new_store,
+                'transaction_date' => $request->transaction_date,
+                'total_amount' => $request->total_amount,
+                'items' => $request->items ?? []
+            ];
+            
+            $receipt->update([
+                'raw_text' => json_encode($draftData),
+                'store_id' => $storeId,
+                'receipt_number' => $request->receipt_number,
+                'transaction_date' => $request->transaction_date,
+                'total_amount' => $request->total_amount ?? 0,
+            ]);
+            
+            session()->forget('ai_receipt_items_' . $receipt->image_path);
+            
+            return redirect()->route('admin.receipts.index')
+                ->with('success', __('Draft saved successfully. You can resume validation later.'));
+        }
+
         $request->validate([
             'receipt_number' => 'nullable|string|max:255',
             'store_id' => 'required_without:new_store|nullable|exists:stores,id',
@@ -269,6 +436,24 @@ class ReceiptController extends Controller
             ->with('success', __('Receipt validated and processed successfully.'));
     }
 
+    public function uploadImage(Request $request, $id)
+    {
+        $request->validate([
+            'receipt_image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+        ]);
+        
+        $receipt = Receipt::findOrFail($id);
+        
+        $imagePath = $request->file('receipt_image')->store('receipts', 'public');
+        
+        $receipt->update([
+            'image_path' => $imagePath
+        ]);
+        
+        return redirect()->route('admin.receipts.validate', $receipt->id)
+            ->with('success', __('Gambar berhasil ditambahkan.'));
+    }
+
     public function destroy(\App\Models\Receipt $receipt)
     {
         // 1 & 2: Revert Inventory and Delete Debt only if the receipt was validated
@@ -276,12 +461,30 @@ class ReceiptController extends Controller
             foreach ($receipt->items as $item) {
                 $product = \App\Models\Product::find($item->product_id);
                 if ($product) {
-                    $product->stock -= $item->quantity;
-                    // Ensure stock doesn't go below 0 just in case
+                    // Revert the stock based on receipt type
+                    if ($receipt->type === 'pembelian') {
+                        // Originally added stock, so we remove it
+                        $product->stock -= $item->quantity;
+                    } else {
+                        // Originally removed stock (sale), so we add it back
+                        $product->stock += $item->quantity;
+                    }
+
+                    // Ensure stock doesn't go below 0
                     if ($product->stock < 0) {
                         $product->stock = 0;
                     }
                     $product->save();
+
+                    // Log this reversal in the Stock History
+                    \App\Models\StockMovement::create([
+                        'product_id' => $product->id,
+                        'user_id' => auth()->id(),
+                        'type' => $receipt->type === 'pembelian' ? 'out' : 'in',
+                        'quantity' => $item->quantity,
+                        'balance' => $product->stock,
+                        'notes' => 'Stock reverted due to deleted Receipt #' . $receipt->receipt_number,
+                    ]);
                 }
             }
 
@@ -447,21 +650,62 @@ class ReceiptController extends Controller
     }
 
     // Generate SKU from product name
+    // Format: 3-4 letter abbreviation (first letter of each word) + numbers from name, ALL CAPS
+    // e.g. "Paku Raja 5" → "PR5", "Kawat BWG 10" → "KB10", "Asbes 180" → "ASB180"
     private function generateSKU($name)
     {
-        // Take first 3 letters of each word, uppercase
-        $words = preg_split('/[\s\-_]+/', $name);
-        $skuParts = array_map(function($word) {
-            return strtoupper(substr($word, 0, min(3, strlen($word))));
-        }, $words);
+        // Split into words, remove special chars like @
+        $cleanName = preg_replace('/[@#]/', '', $name);
+        $words = preg_split('/[\s\-_\/]+/', $cleanName);
 
-        $sku = implode('', $skuParts);
+        $letters = '';
+        $numbers = '';
 
-        // Ensure uniqueness by adding timestamp if needed
+        foreach ($words as $word) {
+            $word = trim($word);
+            if ($word === '') continue;
+
+            // If word is purely numeric, treat as the size/quantity part
+            if (preg_match('/^\d+$/', $word)) {
+                $numbers .= $word;
+            } else {
+                // Extract leading letters for abbreviation, and trailing numbers
+                if (preg_match('/^([a-zA-Z]+)(\d*)$/', $word, $m)) {
+                    $letters .= strtoupper(substr($m[1], 0, 1));
+                    if ($m[2] !== '') {
+                        $numbers .= $m[2];
+                    }
+                } else {
+                    // Mixed/special word — just take first letter
+                    $firstChar = substr(preg_replace('/[^a-zA-Z]/', '', $word), 0, 1);
+                    if ($firstChar) {
+                        $letters .= strtoupper($firstChar);
+                    }
+                    // Extract any digits
+                    $digits = preg_replace('/[^\d]/', '', $word);
+                    if ($digits) {
+                        $numbers .= $digits;
+                    }
+                }
+            }
+        }
+
+        // Ensure letters part is 2-4 chars (pad with extra chars from first word if only 1 letter)
+        if (strlen($letters) < 2 && count($words) > 0) {
+            $firstWord = preg_replace('/[^a-zA-Z]/', '', $words[0]);
+            $letters = strtoupper(substr($firstWord, 0, 3));
+        }
+
+        // Cap letters at 4 characters max
+        $letters = substr($letters, 0, 4);
+
+        $sku = $letters . $numbers;
+
+        // Ensure uniqueness
         $baseSku = $sku;
         $counter = 1;
         while (Product::where('sku', $sku)->exists()) {
-            $sku = $baseSku . $counter;
+            $sku = $baseSku . '-' . $counter;
             $counter++;
         }
 

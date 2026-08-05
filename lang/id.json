@@ -1,6 +1,6 @@
 {
     "Dashboard": "Dasbor",
-    "Receipts": "Nota Pembelian",
+    "Receipts": "Nota",
     "Products": "Data Barang",
     "Stores": "Data Toko",
     "Active Debts": "Hutang Aktif",
@@ -143,5 +143,16 @@
     "Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.": "Lupa kata sandi? Tidak masalah. Cukup beri tahu alamat email Anda dan kami akan mengirimkan link reset kata sandi.",
     "Resend Verification Email": "Kirim Ulang Email Verifikasi",
     "A new verification link has been sent to the email address you provided during registration.": "Link verifikasi baru telah dikirim ke alamat email yang Anda berikan saat pendaftaran.",
-    "This is a secure area of the application. Please confirm your password before continuing.": "Ini adalah area aman dari aplikasi. Harap konfirmasi kata sandi Anda sebelum melanjutkan."
+    "This is a secure area of the application. Please confirm your password before continuing.": "Ini adalah area aman dari aplikasi. Harap konfirmasi kata sandi Anda sebelum melanjutkan.",
+    "Stock History": "Riwayat Stok",
+    "Track all inventory changes, manual adjustments, and receipt entries.": "Lacak semua perubahan inventaris, penyesuaian manual, dan entri nota.",
+    "Date & Time": "Tanggal & Waktu",
+    "Change": "Perubahan",
+    "Balance": "Sisa Stok",
+    "Reference": "Referensi",
+    "User": "Pengguna",
+    "Unknown Product": "Barang Tidak Diketahui",
+    "Manual Edit": "Edit Manual",
+    "No stock movements found.": "Tidak ada pergerakan stok ditemukan.",
+    "Back to Products": "Kembali ke Data Barang"
 }

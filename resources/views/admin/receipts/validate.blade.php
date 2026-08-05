@@ -14,24 +14,7 @@
     </div>
 </div>
 
-<form action="{{ route('admin.receipts.validateSubmit', $receipt->id) }}" method="POST">
-    @csrf
-    
-    @if ($errors->any())
-        <div class="alert alert-danger mb-4 border-0 shadow-sm">
-            <div class="d-flex align-items-center mb-2">
-                <i class="ph-fill ph-warning-circle fs-4 me-2"></i>
-                <h6 class="mb-0 fw-bold">Please fix the following errors:</h6>
-            </div>
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <div class="row">
+<div class="row">
         <!-- Image Preview Column -->
         <div class="col-lg-5 mb-4 mb-lg-0">
             <div class="card border-0 shadow-sm h-100 sticky-top" style="top: 90px; z-index: 10;">
@@ -40,7 +23,24 @@
                 </div>
                 <div class="card-body p-4 text-center">
                     <div class="border rounded p-2 bg-light d-flex justify-content-center align-items-center" style="min-height: 400px; max-height: 600px; overflow: hidden;">
-                        <img src="{{ Storage::url($receipt->image_path) }}" alt="Receipt" class="img-fluid rounded" style="object-fit: contain; max-height: 100%; width: auto;">
+                        @if($receipt->image_path)
+                            <img src="{{ Storage::url($receipt->image_path) }}" alt="Receipt" class="img-fluid rounded" style="object-fit: contain; max-height: 100%; width: auto;">
+                        @else
+                            <div class="text-center text-muted w-100 px-4">
+                                <i class="ph-fill ph-keyboard" style="font-size: 5rem; opacity: 0.5;"></i>
+                                <h4 class="mt-3 fw-medium">Input Manual</h4>
+                                <p class="mb-4">Tidak ada gambar nota yang diunggah.</p>
+                                
+                                <form action="{{ route('admin.receipts.uploadImage', $receipt->id) }}" method="POST" enctype="multipart/form-data" class="mt-4 p-3 border rounded bg-white shadow-sm">
+                                    @csrf
+                                    <label class="form-label small fw-bold text-start w-100">Tambahkan Gambar (Opsional)</label>
+                                    <input type="file" name="receipt_image" class="form-control form-control-sm mb-2" accept="image/jpeg,image/png,image/jpg" required>
+                                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                                        <i class="ph-bold ph-upload-simple me-1"></i> Unggah Gambar
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -48,6 +48,22 @@
         
         <!-- Validation Form Column -->
         <div class="col-lg-7">
+            <form action="{{ route('admin.receipts.validateSubmit', $receipt->id) }}" method="POST">
+                @csrf
+                
+                @if ($errors->any())
+                    <div class="alert alert-danger mb-4 border-0 shadow-sm">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="ph-fill ph-warning-circle fs-4 me-2"></i>
+                            <h6 class="mb-0 fw-bold">Please fix the following errors:</h6>
+                        </div>
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
             <!-- General Info -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
@@ -56,9 +72,21 @@
                 <div class="card-body p-4">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-medium">{{ __('Toko/Supplier') }}</label>
-                            <input type="hidden" name="store_id" value="{{ $receipt->store_id }}">
-                            <input type="text" class="form-control bg-light" value="{{ $receipt->store->name ?? __('Unknown') }}" readonly>
+                            <label class="form-label fw-medium">{{ __('Toko/Supplier') }} <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="ph ph-storefront"></i></span>
+                                <select class="form-select @error('store_id') is-invalid @enderror" id="store_id" name="store_id" required>
+                                    <option value="" disabled {{ !$receipt->store_id ? 'selected' : '' }}>-- Select Store/Vendor --</option>
+                                    @foreach($stores as $store)
+                                        <option value="{{ $store->id }}" {{ (old('store_id', $receipt->store_id) == $store->id) ? 'selected' : '' }}>
+                                            {{ $store->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-text mt-2">
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#addVendorModal" class="text-decoration-none"><i class="ph-bold ph-plus"></i> Add new vendor</a>
+                            </div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="receipt_number" class="form-label fw-medium">{{ __('Nomor Nota') }}</label>
@@ -83,9 +111,7 @@
                             <div class="form-text mt-1"><i class="ph ph-magic-wand"></i> {{ __('Akan diperbarui otomatis berdasarkan subtotal barang.') }}</div>
                         </div>
                         <div class="col-md-6 mb-3 d-flex align-items-end">
-                            <button type="button" class="btn btn-outline-success w-100 mb-4" id="convertUsdBtn">
-                                <i class="ph-bold ph-currency-circle-dollar me-1"></i> {{ __('Konversi USD ke IDR') }}
-                            </button>
+                            <!-- Removed USD to IDR Button -->
                         </div>
                     </div>
                     <div class="row border-top pt-3 mt-1 bg-light bg-opacity-50 rounded">
@@ -149,10 +175,10 @@
                                 @forelse($items as $index => $item)
                                     <tr class="item-row">
                                         <td>
-                                            <input type="text" class="form-control" name="items[{{ $index }}][name]" value="{{ old('items.'.$index.'.name', $item['name'] ?? '') }}" style="min-width: 150px;" required>
+                                            <input type="text" class="form-control" name="items[{{ $index }}][name]" value="{{ old('items.'.$index.'.name', $item['name'] ?? '') }}" list="productList" style="min-width: 150px;" required>
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control" name="items[{{ $index }}][category]" value="{{ old('items.'.$index.'.category') }}" list="categoryList" placeholder="e.g. Paku" style="min-width: 120px;">
+                                            <input type="text" class="form-control" name="items[{{ $index }}][category]" list="categoryList" placeholder="e.g. Paku" value="{{ old('items.'.$index.'.category', $item['category'] ?? '') }}" style="min-width: 120px;">
                                         </td>
                                         <td>
                                             <input type="number" step="1" min="1" class="form-control qty-input px-2" name="items[{{ $index }}][quantity]" value="{{ old('items.'.$index.'.quantity', $item['quantity'] ?? 1) }}" style="min-width: 80px;" required>
@@ -190,17 +216,20 @@
             
             <div class="d-flex justify-content-end gap-3 mb-5">
                 <a href="{{ route('admin.receipts.index') }}" class="btn btn-light border px-4 py-2">{{ __('Batal') }}</a>
-                <button type="submit" class="btn btn-success px-5 py-2 fw-semibold">
+                <button type="submit" name="action" value="draft" class="btn btn-outline-primary px-4 py-2 fw-semibold" formnovalidate>
+                    <i class="ph-bold ph-floppy-disk me-1"></i> {{ __('Simpan Draft') }}
+                </button>
+                <button type="submit" name="action" value="confirm" class="btn btn-success px-5 py-2 fw-semibold">
                     <i class="ph-bold ph-check-circle me-1"></i> {{ __('Konfirmasi & Simpan ke Inventaris') }}
                 </button>
             </div>
+            </form>
         </div>
     </div>
-</form>
 
 <template id="itemRowTemplate">
     <tr class="item-row">
-        <td><input type="text" class="form-control" name="items[__INDEX__][name]" style="min-width: 150px;" required></td>
+        <td><input type="text" class="form-control" name="items[__INDEX__][name]" list="productList" style="min-width: 150px;" required></td>
         <td><input type="text" class="form-control" name="items[__INDEX__][category]" list="categoryList" placeholder="e.g. Paku" style="min-width: 120px;"></td>
         <td><input type="number" step="1" min="1" class="form-control qty-input px-2" name="items[__INDEX__][quantity]" value="1" style="min-width: 80px;" required></td>
         <td><input type="number" step="0.01" min="0.01" class="form-control measure-input px-2" name="items[__INDEX__][measure]" value="1" style="min-width: 80px;"></td>
@@ -216,6 +245,45 @@
         <option value="{{ $cat }}">
     @endforeach
 </datalist>
+
+<datalist id="productList">
+    @foreach($productNames as $name)
+        <option value="{{ $name }}">
+    @endforeach
+</datalist>
+
+<!-- Add Vendor Modal -->
+<div class="modal fade" id="addVendorModal" tabindex="-1" aria-labelledby="addVendorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="addVendorForm" onsubmit="window.submitVendorForm(event)">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addVendorModalLabel">Add New Vendor</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div id="vendorAlert" class="alert alert-danger d-none"></div>
+            <div class="mb-3">
+                <label for="vendor_name" class="form-label fw-medium">Vendor Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="vendor_name" name="name" required>
+            </div>
+            <div class="mb-3">
+                <label for="vendor_phone" class="form-label fw-medium">Phone Number</label>
+                <input type="text" class="form-control" id="vendor_phone" name="phone">
+            </div>
+            <div class="mb-3">
+                <label for="vendor_address" class="form-label fw-medium">Address</label>
+                <textarea class="form-control" id="vendor_address" name="address" rows="2"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveVendorBtn">Save Vendor</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 @endsection
 
@@ -307,47 +375,6 @@
 
         // Initial calculation to ensure subtotals match if manually edited earlier
         updateSubtotalsAndTotal();
-
-        // USD to IDR Converter
-        const convertUsdBtn = document.getElementById('convertUsdBtn');
-        if (convertUsdBtn) {
-            convertUsdBtn.addEventListener('click', async function() {
-                const originalText = this.innerHTML;
-                this.innerHTML = '<i class="ph-bold ph-spinner ph-spin me-1"></i> Fetching Rate...';
-                this.disabled = true;
-
-                try {
-                    const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-                    const data = await response.json();
-                    const idrRate = data.rates.IDR;
-
-                    if (!idrRate) throw new Error("IDR rate not found");
-
-                    // Ask for confirmation
-                    if (confirm(`Current USD to IDR rate is Rp ${idrRate.toLocaleString('id-ID')}.\n\nDo you want to multiply all unit prices by this rate?`)) {
-                        
-                        document.querySelectorAll('.item-row').forEach(row => {
-                            const priceInput = row.querySelector('.price-input');
-                            const currentPrice = parseFloat(priceInput.value) || 0;
-                            
-                            // Multiply and format to 2 decimal places to avoid floating point issues
-                            priceInput.value = (currentPrice * idrRate).toFixed(2);
-                        });
-
-                        // Update all subtotals and the grand total
-                        updateSubtotalsAndTotal();
-                        
-                        alert('Successfully converted all prices to IDR!');
-                    }
-                } catch (error) {
-                    console.error('Error fetching exchange rate:', error);
-                    alert('Failed to fetch the latest exchange rate. Please check your internet connection.');
-                } finally {
-                    this.innerHTML = originalText;
-                    this.disabled = false;
-                }
-            });
-        }
         // Payment Status Logic
         const paymentStatus = document.getElementById('payment_status');
         const amountPaidContainer = document.getElementById('amount_paid_container');
@@ -378,5 +405,76 @@
         // Initial setup
         updatePaymentFields();
     })();
+
+    window.submitVendorForm = function(e) {
+        e.preventDefault();
+        
+        const form = document.getElementById('addVendorForm');
+        const btn = document.getElementById('saveVendorBtn');
+        const alertBox = document.getElementById('vendorAlert');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+        alertBox.classList.add('d-none');
+        
+        const formData = new FormData(form);
+        
+        fetch('{{ route('stores.store') }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => response.json().then(data => ({ status: response.status, body: data })))
+        .then(res => {
+            if (res.status === 422) {
+                let errorMsg = '';
+                for (let field in res.body.errors) {
+                    errorMsg += res.body.errors[field][0] + '<br>';
+                }
+                alertBox.innerHTML = errorMsg;
+                alertBox.classList.remove('d-none');
+            } else if (res.status === 200 || res.status === 201) {
+                const store = res.body.store;
+                
+                const select = document.getElementById('store_id');
+                const option = new Option(store.name, store.id, true, true);
+                select.add(option);
+                
+                // Hide modal reliably
+                const modalEl = document.getElementById('addVendorModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) {
+                    modal.hide();
+                } else {
+                    modalEl.classList.remove('show');
+                    modalEl.style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                }
+                
+                setTimeout(() => {
+                    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                }, 300);
+                
+                form.reset();
+            } else {
+                alertBox.innerHTML = 'An unexpected error occurred.';
+                alertBox.classList.remove('d-none');
+            }
+        })
+        .catch(error => {
+            alertBox.innerHTML = 'Network error. Please try again.';
+            alertBox.classList.remove('d-none');
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = 'Save Vendor';
+        });
+    };
 </script>
 @endpush

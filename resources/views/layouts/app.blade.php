@@ -56,8 +56,11 @@
                 <a href="{{ route('admin.receipts.index') }}" class="{{ request()->routeIs('admin.receipts.*') ? 'active' : '' }}">
                     <i class="ph ph-receipt fs-5"></i> {{ __('Receipts') }}
                 </a>
-                <a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}">
+                <a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.index', 'products.show', 'products.edit') ? 'active' : '' }}">
                     <i class="ph ph-package fs-5"></i> {{ __('Products') }}
+                </a>
+                <a href="{{ route('products.history') }}" class="{{ request()->routeIs('products.history') ? 'active' : '' }}">
+                    <i class="ph ph-clock-counter-clockwise fs-5"></i> {{ __('Stock History') }}
                 </a>
                 <a href="{{ route('stores.index') }}" class="{{ request()->routeIs('stores.*') ? 'active' : '' }}">
                     <i class="ph ph-storefront fs-5"></i> {{ __('Stores') }}
